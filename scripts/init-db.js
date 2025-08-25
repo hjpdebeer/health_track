@@ -54,6 +54,31 @@ db.serialize(() => {
     )
   `);
 
+  // Sleep goals table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS sleep_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      target_hours REAL NOT NULL,
+      target_bedtime TIME NOT NULL,
+      target_wake_time TIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Sleep sessions table for tracking actual sleep
+  db.run(`
+    CREATE TABLE IF NOT EXISTS sleep_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      start_time DATETIME NOT NULL,
+      end_time DATETIME,
+      actual_hours REAL,
+      completed BOOLEAN DEFAULT FALSE,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Insert default settings if none exist
   db.run(`
     INSERT OR IGNORE INTO settings (id, weight_unit, height_unit) 

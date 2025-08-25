@@ -177,6 +177,111 @@ app.post('/api/settings', (req, res) => {
   );
 });
 
+// Sleep goals
+app.get('/api/sleep-goals', (req, res) => {
+  db.get('SELECT * FROM sleep_goals ORDER BY created_at DESC LIMIT 1', (err, row) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(row || null);
+  });
+});
+
+app.post('/api/sleep-goals', (req, res) => {
+  const { target_hours, target_bedtime, target_wake_time } = req.body;
+  
+  db.run(
+    'INSERT INTO sleep_goals (target_hours, target_bedtime, target_wake_time) VALUES (?, ?, ?)',
+    [target_hours, target_bedtime, target_wake_time],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ id: this.lastID, target_hours, target_bedtime, target_wake_time });
+    }
+  );
+});
+
+// Sleep sessions
+app.get('/api/sleep', (req, res) => {
+  db.all('SELECT * FROM sleep_sessions ORDER BY start_time DESC', (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+app.post('/api/sleep/start', (req, res) => {
+  const { start_time } = req.body;
+  const startDateTime = start_time || new Date().toISOString();
+  
+  db.run(
+    'INSERT INTO sleep_sessions (start_time) VALUES (?)',
+    [startDateTime],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ id: this.lastID, start_time: startDateTime });
+    }
+  );
+});
+
+app.patch('/api/sleep/:id/end', (req, res) => {
+  const { id } = req.params;
+  const { end_time, notes } = req.body;
+  const endDateTime = end_time || new Date().toISOString();
+  
+  // Get the start time to calculate actual duration
+  db.get('SELECT start_time FROM sleep_sessions WHERE id = ?', [id], (err, row) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    
+    if (!row) {
+      res.status(404).json({ error: 'Sleep session not found' });
+      return;
+    }
+    
+    // Calculate actual hours
+    const startTime = new Date(row.start_time);
+    const endTime = new Date(endDateTime);
+    const actualHours = (endTime - startTime) / (1000 * 60 * 60);
+    
+    db.run(
+      'UPDATE sleep_sessions SET end_time = ?, actual_hours = ?, completed = TRUE, notes = ? WHERE id = ?',
+      [endDateTime, actualHours, notes || null, id],
+      function(err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        res.json({ success: true, end_time: endDateTime, actual_hours: actualHours });
+      }
+    );
+  });
+});
+
+// Get current active sleep
+app.get('/api/sleep/current', (req, res) => {
+  db.get(
+    'SELECT * FROM sleep_sessions WHERE end_time IS NULL ORDER BY start_time DESC LIMIT 1',
+    (err, row) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json(row || null);
+    }
+  );
+});
+
 // Stats endpoint
 app.get('/api/stats', (req, res) => {
   const stats = {};

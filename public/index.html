@@ -11,6 +11,7 @@
         <header>
             <nav class="nav-bar">
                 <a href="/" class="nav-link active">📊 Dashboard</a>
+                <a href="/goals.html" class="nav-link">🎯 Goals</a>
                 <a href="/settings.html" class="nav-link">⚙️ Settings</a>
             </nav>
             <h1>🏋️ Weight Loss & Intermittent Fasting Tracker</h1>
@@ -37,6 +38,10 @@
                 <div class="stat-card">
                     <h3>Current Fast</h3>
                     <span id="fast-status">Not fasting</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Current Sleep</h3>
+                    <span id="sleep-status">Not sleeping</span>
                 </div>
             </section>
 
@@ -125,13 +130,64 @@
                 </div>
 
                 <div class="card">
-                    <h3>🎯 Set Goal</h3>
-                    <form id="goal-form">
-                        <input type="number" id="target-weight" placeholder="Target Weight" step="0.1" required>
-                        <input type="date" id="target-date" required>
-                        <button type="submit">Set Goal</button>
-                    </form>
+                    <h3 id="sleep-title">😴 Sleep Manager</h3>
+                    
+                    <!-- Start Sleep Section -->
+                    <div id="start-sleep-section">
+                        <div class="sleep-form-group">
+                            <label for="sleep-start-date">Bedtime Date:</label>
+                            <input type="date" id="sleep-start-date" required>
+                        </div>
+                        
+                        <div class="sleep-form-group">
+                            <label for="sleep-start-time">Bedtime:</label>
+                            <input type="time" id="sleep-start-time" required>
+                        </div>
+                        
+                        <button id="start-sleep">Start Sleep</button>
+                    </div>
+                    
+                    <!-- Active Sleep Section -->
+                    <div id="active-sleep-section" style="display: none;">
+                        <div class="active-sleep-info">
+                            <p><strong>💤 Sleep in Progress</strong></p>
+                            <p>Started: <span id="sleep-start-display"></span></p>
+                            <p>Duration: <span id="sleep-duration-display"></span></p>
+                        </div>
+                        
+                        <div class="wake-up-controls">
+                            <h4>☀️ Wake Up</h4>
+                            <div class="sleep-end-options">
+                                <div class="sleep-end-option">
+                                    <button id="end-sleep-now" class="end-now-btn">Wake Up Now</button>
+                                    <small>End sleep at current time</small>
+                                </div>
+                                
+                                <div class="sleep-end-option">
+                                    <div class="custom-end-controls">
+                                        <div class="sleep-form-group">
+                                            <label for="wake-date">Wake Date:</label>
+                                            <input type="date" id="wake-date" required>
+                                        </div>
+                                        
+                                        <div class="sleep-form-group">
+                                            <label for="wake-time">Wake Time:</label>
+                                            <input type="time" id="wake-time" required>
+                                        </div>
+                                        
+                                        <div class="sleep-form-group">
+                                            <label for="sleep-notes">Sleep Quality Notes (optional):</label>
+                                            <textarea id="sleep-notes" placeholder="How did you sleep? Any observations..." rows="2"></textarea>
+                                        </div>
+                                        
+                                        <button id="complete-sleep">Complete Sleep</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
             </section>
 
             <section class="data-section">
@@ -146,6 +202,14 @@
                 <div class="card">
                     <h3>🕐 Fasting History</h3>
                     <div id="fasting-history"></div>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Sleep Progress</h3>
+                    <div id="sleep-chart">
+                        <canvas id="sleep-canvas" width="400" height="200"></canvas>
+                    </div>
+                    <div id="sleep-history"></div>
                 </div>
             </section>
         </main>

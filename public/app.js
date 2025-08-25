@@ -2,6 +2,8 @@ class HealthTracker {
   constructor() {
     this.currentFast = null;
     this.fastTimer = null;
+    this.currentSleep = null;
+    this.sleepTimer = null;
     this.settings = null;
     this.init();
   }
@@ -11,7 +13,9 @@ class HealthTracker {
     await this.loadStats();
     await this.loadWeightHistory();
     await this.loadFastingHistory();
+    await this.loadSleepHistory();
     await this.checkCurrentFast();
+    await this.checkCurrentSleep();
     this.setDefaultDate();
   }
 
@@ -22,11 +26,6 @@ class HealthTracker {
       this.logWeight();
     });
 
-    // Goal form
-    document.getElementById('goal-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.setGoal();
-    });
 
     // Fasting controls
     document.getElementById('start-fast').addEventListener('click', (e) => {
@@ -44,6 +43,23 @@ class HealthTracker {
       e.preventDefault();
       this.completeFast();
     });
+
+    // Sleep controls
+    document.getElementById('start-sleep').addEventListener('click', (e) => {
+      e.preventDefault();
+      this.startSleep();
+    });
+
+    // Sleep end controls
+    document.getElementById('end-sleep-now').addEventListener('click', (e) => {
+      e.preventDefault();
+      this.endSleepNow();
+    });
+
+    document.getElementById('complete-sleep').addEventListener('click', (e) => {
+      e.preventDefault();
+      this.completeSleep();
+    });
   }
 
   setDefaultDate() {
@@ -54,16 +70,18 @@ class HealthTracker {
     // Weight form
     document.getElementById('weight-date').value = today;
     
-    // Goal form
-    const nextMonth = new Date();
-    nextMonth.setMonth(nextMonth.getMonth() + 3);
-    document.getElementById('target-date').value = nextMonth.toISOString().split('T')[0];
     
     // Fasting form defaults
     document.getElementById('fast-start-date').value = today;
     document.getElementById('fast-start-time').value = currentTime;
     document.getElementById('break-date').value = today;
     document.getElementById('break-time').value = currentTime;
+    
+    // Sleep form defaults
+    document.getElementById('sleep-start-date').value = today;
+    document.getElementById('sleep-start-time').value = currentTime;
+    document.getElementById('wake-date').value = today;
+    document.getElementById('wake-time').value = currentTime;
   }
 
   async loadStats() {
@@ -119,9 +137,6 @@ class HealthTracker {
     const weightInput = document.getElementById('weight-input');
     weightInput.placeholder = `Weight (${weightUnit})`;
     
-    // Update target weight input placeholder
-    const targetWeightInput = document.getElementById('target-weight');
-    targetWeightInput.placeholder = `Target Weight (${weightUnit})`;
   }
 
   async logWeight() {
@@ -149,36 +164,6 @@ class HealthTracker {
     }
   }
 
-  async setGoal() {
-    const targetWeight = document.getElementById('target-weight').value;
-    const targetDate = document.getElementById('target-date').value;
-
-    // Get current weight as start weight
-    const statsResponse = await fetch('/api/stats');
-    const stats = await statsResponse.json();
-
-    try {
-      const response = await fetch('/api/goals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          target_weight: parseFloat(targetWeight),
-          start_weight: stats.currentWeight,
-          target_date: targetDate
-        })
-      });
-
-      if (response.ok) {
-        document.getElementById('goal-form').reset();
-        this.setDefaultDate();
-        await this.loadStats();
-        this.showMessage('Goal set successfully!', 'success');
-      }
-    } catch (error) {
-      console.error('Error setting goal:', error);
-      this.showMessage('Error setting goal', 'error');
-    }
-  }
 
   async startFast() {
     const duration = document.getElementById('fasting-duration').value;
@@ -324,6 +309,10 @@ class HealthTracker {
     // Update status
     document.getElementById('fast-status').textContent = 
       isActive ? 'Fasting in progress' : 'Not fasting';
+    
+    // Update sleep status
+    document.getElementById('sleep-status').textContent = 
+      this.currentSleep ? 'Sleeping' : 'Not sleeping';
     
     // If we have an active fast, populate the display
     if (isActive && this.currentFast) {
@@ -493,6 +482,285 @@ class HealthTracker {
       
       // Draw point
       ctx.fillStyle = '#4CAF50';
+      ctx.fillRect(x - 2, y - 2, 4, 4);
+    });
+    
+    ctx.stroke();
+  }
+
+  async startSleep() {
+    const startDate = document.getElementById('sleep-start-date').value;
+    const startTime = document.getElementById('sleep-start-time').value;
+
+    if (!startDate || !startTime) {
+      this.showMessage('Please select bedtime date and time', 'error');
+      return;
+    }
+
+    const startDateTime = new Date(`${startDate}T${startTime}`).toISOString();
+
+    try {
+      const response = await fetch('/api/sleep/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_time: startDateTime })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.currentSleep = data;
+        this.updateSleepUI();
+        this.startSleepTimer();
+        this.showMessage('Sleep started!', 'success');
+      }
+    } catch (error) {
+      console.error('Error starting sleep:', error);
+      this.showMessage('Error starting sleep', 'error');
+    }
+  }
+
+  async endSleepNow() {
+    if (!this.currentSleep) {
+      this.showMessage('No active sleep to end', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/sleep/${this.currentSleep.id}/end`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          end_time: new Date().toISOString(),
+          notes: 'Woke up now'
+        })
+      });
+
+      if (response.ok) {
+        this.currentSleep = null;
+        this.stopSleepTimer();
+        this.updateSleepUI();
+        await this.loadSleepHistory();
+        const data = await response.json();
+        this.showMessage(`Sleep ended! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
+      } else {
+        this.showMessage('Error ending sleep', 'error');
+      }
+    } catch (error) {
+      console.error('Error ending sleep:', error);
+      this.showMessage('Error ending sleep', 'error');
+    }
+  }
+
+  async completeSleep() {
+    if (!this.currentSleep) {
+      this.showMessage('No active sleep to complete', 'error');
+      return;
+    }
+
+    const wakeDate = document.getElementById('wake-date').value;
+    const wakeTime = document.getElementById('wake-time').value;
+    const notes = document.getElementById('sleep-notes').value;
+
+    if (!wakeDate || !wakeTime) {
+      this.showMessage('Please select wake date and time', 'error');
+      return;
+    }
+
+    const wakeDateTime = new Date(`${wakeDate}T${wakeTime}`).toISOString();
+
+    try {
+      const response = await fetch(`/api/sleep/${this.currentSleep.id}/end`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          end_time: wakeDateTime,
+          notes: notes
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.currentSleep = null;
+        this.stopSleepTimer();
+        this.updateSleepUI();
+        await this.loadSleepHistory();
+        
+        // Clear the sleep form
+        document.getElementById('sleep-notes').value = '';
+        this.setDefaultDate();
+        
+        this.showMessage(`Sleep completed! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
+      } else {
+        this.showMessage('Error completing sleep', 'error');
+      }
+    } catch (error) {
+      console.error('Error completing sleep:', error);
+      this.showMessage('Error completing sleep', 'error');
+    }
+  }
+
+  async checkCurrentSleep() {
+    try {
+      const response = await fetch('/api/sleep/current');
+      const sleep = await response.json();
+      
+      if (sleep) {
+        this.currentSleep = sleep;
+        this.updateSleepUI();
+        this.startSleepTimer();
+      }
+    } catch (error) {
+      console.error('Error checking current sleep:', error);
+    }
+  }
+
+  updateSleepUI() {
+    const isActive = this.currentSleep !== null;
+    
+    // Toggle sections within the unified pane
+    document.getElementById('start-sleep-section').style.display = isActive ? 'none' : 'block';
+    document.getElementById('active-sleep-section').style.display = isActive ? 'block' : 'none';
+    
+    // Update title based on state
+    const title = document.getElementById('sleep-title');
+    title.textContent = isActive ? '💤 Active Sleep' : '😴 Sleep Manager';
+    
+    // Update status
+    document.getElementById('sleep-status').textContent = 
+      isActive ? 'Sleeping' : 'Not sleeping';
+    
+    // If we have an active sleep, populate the display
+    if (isActive && this.currentSleep) {
+      const startTime = new Date(this.currentSleep.start_time);
+      document.getElementById('sleep-start-display').textContent = 
+        startTime.toLocaleString();
+        
+      // Set default wake date/time to current time for convenience
+      this.setDefaultWakeTime();
+    }
+  }
+  
+  setDefaultWakeTime() {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().slice(0, 5);
+    
+    document.getElementById('wake-date').value = today;
+    document.getElementById('wake-time').value = currentTime;
+  }
+
+  startSleepTimer() {
+    if (!this.currentSleep) return;
+
+    this.sleepTimer = setInterval(() => {
+      this.updateSleepDisplay();
+    }, 1000);
+    
+    this.updateSleepDisplay();
+  }
+
+  stopSleepTimer() {
+    if (this.sleepTimer) {
+      clearInterval(this.sleepTimer);
+      this.sleepTimer = null;
+    }
+  }
+
+  updateSleepDisplay() {
+    if (!this.currentSleep) return;
+
+    const startTime = new Date(this.currentSleep.start_time);
+    const now = new Date();
+    const elapsed = now - startTime;
+
+    const hours = Math.floor(elapsed / (1000 * 60 * 60));
+    const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+    
+    document.getElementById('sleep-duration-display').textContent = 
+      `${hours}h ${minutes}m`;
+  }
+
+  async loadSleepHistory() {
+    try {
+      const response = await fetch('/api/sleep');
+      const sleeps = await response.json();
+      
+      const historyDiv = document.getElementById('sleep-history');
+      historyDiv.innerHTML = '';
+      
+      sleeps.slice(0, 5).forEach(sleep => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        
+        const startDate = new Date(sleep.start_time).toLocaleDateString();
+        const status = sleep.completed ? '✅ Completed' : '⏳ In Progress';
+        
+        let durationText = 'In progress';
+        if (sleep.actual_hours && sleep.completed) {
+          durationText = `${sleep.actual_hours.toFixed(1)}h sleep`;
+        }
+        
+        div.innerHTML = `
+          <span>${startDate}</span>
+          <span>${durationText}</span>
+          <span class="status">${status}</span>
+          ${sleep.notes ? `<span class="notes">${sleep.notes}</span>` : ''}
+        `;
+        historyDiv.appendChild(div);
+      });
+
+      this.drawSleepChart(sleeps);
+    } catch (error) {
+      console.error('Error loading sleep history:', error);
+    }
+  }
+
+  drawSleepChart(sleeps) {
+    const canvas = document.getElementById('sleep-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const completedSleeps = sleeps.filter(s => s.completed && s.actual_hours);
+    if (completedSleeps.length < 2) return;
+
+    // Prepare data (reverse to show chronologically)
+    const data = completedSleeps.reverse().slice(-10);
+    const values = data.map(s => s.actual_hours);
+    const minHours = Math.max(0, Math.min(...values) - 1);
+    const maxHours = Math.max(...values) + 1;
+    
+    // Draw chart
+    const padding = 40;
+    const width = canvas.width - padding * 2;
+    const height = canvas.height - padding * 2;
+    
+    // Draw axes
+    ctx.strokeStyle = '#ddd';
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+    
+    // Draw line
+    ctx.strokeStyle = '#6366F1';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    data.forEach((point, index) => {
+      const x = padding + (index / (data.length - 1)) * width;
+      const y = canvas.height - padding - ((point.actual_hours - minHours) / (maxHours - minHours)) * height;
+      
+      if (index === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      
+      // Draw point
+      ctx.fillStyle = '#6366F1';
       ctx.fillRect(x - 2, y - 2, 4, 4);
     });
     

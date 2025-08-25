@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goals - Weight Loss & IF Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav class="nav-bar">
+                <a href="/" class="nav-link">📊 Dashboard</a>
+                <a href="/goals.html" class="nav-link active">🎯 Goals</a>
+                <a href="/settings.html" class="nav-link">⚙️ Settings</a>
+            </nav>
+            <h1>🎯 Goals Management</h1>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="card">
+                    <h3>🏋️ Weight Goal</h3>
+                    <form id="weight-goal-form">
+                        <input type="number" id="target-weight" placeholder="Target Weight" step="0.1" required>
+                        <input type="date" id="target-date" required>
+                        <button type="submit">Set Weight Goal</button>
+                    </form>
+                    
+                    <div id="current-weight-goal" style="margin-top: 20px; display: none;">
+                        <h4>Current Weight Goal</h4>
+                        <div class="goal-display">
+                            <p><strong>Target Weight:</strong> <span id="display-target-weight">--</span></p>
+                            <p><strong>Target Date:</strong> <span id="display-target-date">--</span></p>
+                            <p><strong>Progress:</strong> <span id="display-progress">--</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>😴 Sleep Goal</h3>
+                    <form id="sleep-goal-form">
+                        <label for="target-sleep-hours">Target Sleep Hours per Night:</label>
+                        <input type="number" id="target-sleep-hours" placeholder="8" step="0.5" min="4" max="12" required>
+                        
+                        <label for="target-bedtime">Target Bedtime:</label>
+                        <input type="time" id="target-bedtime" required>
+                        
+                        <label for="target-wake-time">Target Wake Time:</label>
+                        <input type="time" id="target-wake-time" required>
+                        
+                        <button type="submit">Set Sleep Goal</button>
+                    </form>
+                    
+                    <div id="current-sleep-goal" style="margin-top: 20px; display: none;">
+                        <h4>Current Sleep Goal</h4>
+                        <div class="goal-display">
+                            <p><strong>Target Sleep:</strong> <span id="display-sleep-hours">--</span> hours</p>
+                            <p><strong>Bedtime:</strong> <span id="display-bedtime">--</span></p>
+                            <p><strong>Wake Time:</strong> <span id="display-wake-time">--</span></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="goals.js"></script>
+</body>
+</html>
