@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Weight Loss & IF Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav class="nav-bar">
+                <a href="/" class="nav-link">📊 Dashboard</a>
+                <a href="/settings.html" class="nav-link active">⚙️ Settings</a>
+            </nav>
+            <h1>⚙️ Settings</h1>
+        </header>
+
+        <main>
+            <section class="settings-section">
+                <div class="card">
+                    <h3>📏 Unit Preferences</h3>
+                    <form id="settings-form">
+                        <div class="form-group">
+                            <label for="weight-unit">Weight Unit:</label>
+                            <select id="weight-unit" required>
+                                <option value="lbs">Pounds (lbs)</option>
+                                <option value="kg">Kilograms (kg)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="height-unit">Height Unit:</label>
+                            <select id="height-unit" required>
+                                <option value="inches">Inches</option>
+                                <option value="cm">Centimeters</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="user-height">Your Height:</label>
+                            <input type="number" id="user-height" placeholder="Enter your height" step="0.1" required>
+                            <small id="height-unit-label">inches</small>
+                        </div>
+
+                        <button type="submit">Save Settings</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>📋 Current Settings</h3>
+                    <div id="current-settings">
+                        <div class="setting-item">
+                            <span>Weight Unit:</span>
+                            <span id="current-weight-unit">--</span>
+                        </div>
+                        <div class="setting-item">
+                            <span>Height Unit:</span>
+                            <span id="current-height-unit">--</span>
+                        </div>
+                        <div class="setting-item">
+                            <span>Your Height:</span>
+                            <span id="current-height">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📊 BMI Information</h3>
+                    <div class="bmi-info">
+                        <p>BMI (Body Mass Index) is calculated automatically when you have both weight and height data.</p>
+                        <div class="bmi-ranges">
+                            <div class="bmi-range">
+                                <span class="bmi-category underweight">Underweight</span>
+                                <span>< 18.5</span>
+                            </div>
+                            <div class="bmi-range">
+                                <span class="bmi-category normal">Normal</span>
+                                <span>18.5 - 24.9</span>
+                            </div>
+                            <div class="bmi-range">
+                                <span class="bmi-category overweight">Overweight</span>
+                                <span>25.0 - 29.9</span>
+                            </div>
+                            <div class="bmi-range">
+                                <span class="bmi-category obese">Obese</span>
+                                <span>≥ 30.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>ℹ️ About Units</h3>
+                    <div class="unit-info">
+                        <h4>Weight Conversion:</h4>
+                        <p>• 1 kg = 2.205 lbs</p>
+                        <p>• 1 lb = 0.453 kg</p>
+                        
+                        <h4>Height Conversion:</h4>
+                        <p>• 1 inch = 2.54 cm</p>
+                        <p>• 1 cm = 0.394 inches</p>
+                        <p>• 1 foot = 12 inches = 30.48 cm</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>

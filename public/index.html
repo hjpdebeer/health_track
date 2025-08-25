@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight Loss & IF Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav class="nav-bar">
+                <a href="/" class="nav-link active">📊 Dashboard</a>
+                <a href="/settings.html" class="nav-link">⚙️ Settings</a>
+            </nav>
+            <h1>🏋️ Weight Loss & Intermittent Fasting Tracker</h1>
+        </header>
+
+        <main>
+            <section class="stats-section">
+                <div class="stat-card">
+                    <h3>Current Weight</h3>
+                    <span id="current-weight">--</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Goal Weight</h3>
+                    <span id="goal-weight">--</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Progress</h3>
+                    <span id="progress">--</span>
+                </div>
+                <div class="stat-card">
+                    <h3>BMI</h3>
+                    <span id="bmi-value">--</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Current Fast</h3>
+                    <span id="fast-status">Not fasting</span>
+                </div>
+            </section>
+
+            <section class="input-section">
+                <div class="card">
+                    <h3>📊 Log Weight</h3>
+                    <form id="weight-form">
+                        <input type="number" id="weight-input" placeholder="Weight (lbs/kg)" step="0.1" required>
+                        <input type="date" id="weight-date" required>
+                        <textarea id="weight-notes" placeholder="Notes (optional)" rows="2"></textarea>
+                        <button type="submit">Log Weight</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 id="fasting-title">⏰ Fasting Manager</h3>
+                    
+                    <!-- Start Fasting Section -->
+                    <div id="start-fasting-section">
+                        <div class="fasting-form-group">
+                            <label for="fasting-duration">Fasting Duration:</label>
+                            <select id="fasting-duration">
+                                <option value="16">16:8 - 16 Hours Fasting / 8 Hours Eating</option>
+                                <option value="18">18:6 - 18 Hours Fasting / 6 Hours Eating</option>
+                                <option value="20">20:4 - 20 Hours Fasting / 4 Hours Eating</option>
+                                <option value="24">24:0 - 24 Hours Fasting / OMAD</option>
+                            </select>
+                        </div>
+                        
+                        <div class="fasting-form-group">
+                            <label for="fast-start-date">Start Date:</label>
+                            <input type="date" id="fast-start-date" required>
+                        </div>
+                        
+                        <div class="fasting-form-group">
+                            <label for="fast-start-time">Start Time:</label>
+                            <input type="time" id="fast-start-time" required>
+                        </div>
+                        
+                        <button id="start-fast">Start Fast</button>
+                    </div>
+                    
+                    <!-- Active Fasting Section -->
+                    <div id="active-fast-section" style="display: none;">
+                        <div class="active-fast-info">
+                            <p><strong>🟢 Fast in Progress</strong></p>
+                            <p>Started: <span id="fast-start-display"></span></p>
+                            <p>Duration: <span id="fast-duration-display"></span> hours</p>
+                            <p>Time Remaining: <span id="time-remaining"></span></p>
+                            <div class="progress-bar">
+                                <div id="progress-fill"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="break-fast-controls">
+                            <h4>🍽️ End Your Fast</h4>
+                            <div class="fast-end-options">
+                                <div class="fast-end-option">
+                                    <button id="end-fast-now" class="end-now-btn">End Now</button>
+                                    <small>End fast at current time</small>
+                                </div>
+                                
+                                <div class="fast-end-option">
+                                    <div class="custom-end-controls">
+                                        <div class="fasting-form-group">
+                                            <label for="break-date">Break Date:</label>
+                                            <input type="date" id="break-date" required>
+                                        </div>
+                                        
+                                        <div class="fasting-form-group">
+                                            <label for="break-time">Break Time:</label>
+                                            <input type="time" id="break-time" required>
+                                        </div>
+                                        
+                                        <div class="fasting-form-group">
+                                            <label for="fast-notes">Notes (optional):</label>
+                                            <textarea id="fast-notes" placeholder="How did the fast go? Any observations..." rows="2"></textarea>
+                                        </div>
+                                        
+                                        <button id="complete-fast">Complete Fast</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Set Goal</h3>
+                    <form id="goal-form">
+                        <input type="number" id="target-weight" placeholder="Target Weight" step="0.1" required>
+                        <input type="date" id="target-date" required>
+                        <button type="submit">Set Goal</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="data-section">
+                <div class="card">
+                    <h3>📈 Weight Progress</h3>
+                    <div id="weight-chart">
+                        <canvas id="weight-canvas" width="400" height="200"></canvas>
+                    </div>
+                    <div id="weight-history"></div>
+                </div>
+
+                <div class="card">
+                    <h3>🕐 Fasting History</h3>
+                    <div id="fasting-history"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
