@@ -218,6 +218,7 @@ body {
 /* Spinner Animation */
 .spinner-grow {
   opacity: 0.8;
+  animation-duration: 4s !important;
 }
 
 /* Custom Status Indicators */
@@ -226,7 +227,7 @@ body {
   height: 12px;
   border-radius: 50%;
   display: inline-block;
-  animation: pulse 2s infinite;
+  animation: pulse 4s infinite;
 }
 
 .status-indicator.active {
@@ -256,12 +257,17 @@ body {
   background-color: var(--ms-gray-100);
   border-radius: 6px;
   margin-bottom: 16px;
+  min-height: 300px;
+  width: 100%;
 }
 
 #weight-canvas,
 #sleep-canvas {
   border-radius: 4px;
   background-color: white;
+  width: 100% !important;
+  height: 250px !important;
+  max-width: 100%;
 }
 
 /* History List */
@@ -271,10 +277,11 @@ body {
 }
 
 .history-item {
-  padding: 12px;
+  padding: 16px;
   border-bottom: 1px solid var(--ms-gray-200);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 100px 1fr 120px 200px;
+  gap: 16px;
   align-items: center;
 }
 
@@ -282,11 +289,36 @@ body {
   border-bottom: none;
 }
 
+.history-item .date {
+  font-weight: 500;
+  color: var(--ms-gray-900);
+}
+
+.history-item .duration {
+  color: var(--ms-blue);
+  font-weight: 500;
+}
+
+.history-item .status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .history-item .notes {
   font-style: italic;
   color: var(--ms-gray-700);
   font-size: 0.9rem;
-  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .history-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 
 /* Hamburger Navbar */
@@ -312,6 +344,43 @@ body {
 
 .navbar-toggler-icon {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23323130' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Quick Stats Cards */
+.row.mb-4 {
+  justify-content: center;
+}
+
+.row.mb-4 .card {
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.row.mb-4 .card-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.row.mb-4 .card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.row.mb-4 .card-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.row.mb-4 small {
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 /* Mobile Responsive */
@@ -346,6 +415,10 @@ body {
   
   .display-6 {
     font-size: 2rem;
+  }
+  
+  .row.mb-4 .card {
+    min-height: 120px;
   }
 }
 
