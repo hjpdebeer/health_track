@@ -3,66 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goals - Weight Loss & IF Tracker</title>
+    <title>Goals - Health Tracker</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <nav class="nav-bar">
-                <a href="/" class="nav-link">📊 Dashboard</a>
-                <a href="/goals.html" class="nav-link active">🎯 Goals</a>
-                <a href="/settings.html" class="nav-link">⚙️ Settings</a>
-            </nav>
-            <h1>🎯 Goals Management</h1>
-        </header>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="app-logo">
+                    <span class="logo-icon">🏥</span>
+                    <span class="logo-text">Health Tracker</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-search">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search">
+                </div>
+            </div>
+            
+            <div class="sidebar-menu">
+                <a href="/" class="menu-item">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-text">Dashboard</span>
+                </a>
+                <a href="/goals.html" class="menu-item active">
+                    <span class="menu-icon">🎯</span>
+                    <span class="menu-text">Goals</span>
+                </a>
+                <a href="/settings.html" class="menu-item">
+                    <span class="menu-icon">⚙️</span>
+                    <span class="menu-text">Settings</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-apps">
+                <h3>Health Apps</h3>
+                <a href="#" class="app-item">
+                    <span class="app-icon">🏋️</span>
+                    <span class="app-text">Weight</span>
+                </a>
+                <a href="#" class="app-item">
+                    <span class="app-icon">⏰</span>
+                    <span class="app-text">Fasting</span>
+                </a>
+                <a href="#" class="app-item">
+                    <span class="app-icon">😴</span>
+                    <span class="app-text">Sleep</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Set your health goals</h1>
+                <button class="btn-primary">
+                    <span>📊</span>
+                    View Progress
+                </button>
+            </header>
 
-        <main>
-            <section class="input-section">
-                <div class="card">
-                    <h3>🏋️ Weight Goal</h3>
-                    <form id="weight-goal-form">
-                        <input type="number" id="target-weight" placeholder="Target Weight" step="0.1" required>
-                        <input type="date" id="target-date" required>
-                        <button type="submit">Set Weight Goal</button>
-                    </form>
-                    
-                    <div id="current-weight-goal" style="margin-top: 20px; display: none;">
-                        <h4>Current Weight Goal</h4>
-                        <div class="goal-display">
-                            <p><strong>Target Weight:</strong> <span id="display-target-weight">--</span></p>
-                            <p><strong>Target Date:</strong> <span id="display-target-date">--</span></p>
-                            <p><strong>Progress:</strong> <span id="display-progress">--</span></p>
+            <!-- Goals Modules -->
+            <section class="health-modules">
+                <h2>Goal Management</h2>
+                
+                <div class="modules-grid">
+                    <!-- Weight Goal -->
+                    <div class="module-card">
+                        <div class="module-header">
+                            <div class="module-icon weight">🏋️</div>
+                            <div class="module-title">
+                                <h3>Weight Goal</h3>
+                                <p>Set your target weight and timeline</p>
+                            </div>
+                        </div>
+                        
+                        <form class="module-form" id="weight-goal-form">
+                            <div class="form-group">
+                                <input type="number" id="target-weight" placeholder="Target Weight" step="0.1" required>
+                                <input type="date" id="target-date" required>
+                            </div>
+                            <button type="submit" class="btn-module">Set Weight Goal</button>
+                        </form>
+                        
+                        <div id="current-weight-goal" style="margin-top: 24px; display: none;">
+                            <div class="active-status">
+                                <div class="status-indicator active"></div>
+                                <div class="status-text">
+                                    <strong>Active Weight Goal</strong>
+                                    <div>Target: <span id="display-target-weight">--</span></div>
+                                    <div>Due: <span id="display-target-date">--</span></div>
+                                    <div>Progress: <span id="display-progress">--</span></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <h3>😴 Sleep Goal</h3>
-                    <form id="sleep-goal-form">
-                        <label for="target-sleep-hours">Target Sleep Hours per Night:</label>
-                        <input type="number" id="target-sleep-hours" placeholder="8" step="0.5" min="4" max="12" required>
+                    <!-- Sleep Goal -->
+                    <div class="module-card">
+                        <div class="module-header">
+                            <div class="module-icon sleep">😴</div>
+                            <div class="module-title">
+                                <h3>Sleep Goal</h3>
+                                <p>Define your ideal sleep schedule</p>
+                            </div>
+                        </div>
                         
-                        <label for="target-bedtime">Target Bedtime:</label>
-                        <input type="time" id="target-bedtime" required>
+                        <form class="module-form" id="sleep-goal-form">
+                            <div class="form-group">
+                                <input type="number" id="target-sleep-hours" placeholder="Sleep Hours (e.g., 8)" step="0.5" min="4" max="12" required>
+                            </div>
+                            
+                            <div class="form-row">
+                                <input type="time" id="target-bedtime" required>
+                                <input type="time" id="target-wake-time" required>
+                            </div>
+                            
+                            <button type="submit" class="btn-module">Set Sleep Goal</button>
+                        </form>
                         
-                        <label for="target-wake-time">Target Wake Time:</label>
-                        <input type="time" id="target-wake-time" required>
-                        
-                        <button type="submit">Set Sleep Goal</button>
-                    </form>
-                    
-                    <div id="current-sleep-goal" style="margin-top: 20px; display: none;">
-                        <h4>Current Sleep Goal</h4>
-                        <div class="goal-display">
-                            <p><strong>Target Sleep:</strong> <span id="display-sleep-hours">--</span> hours</p>
-                            <p><strong>Bedtime:</strong> <span id="display-bedtime">--</span></p>
-                            <p><strong>Wake Time:</strong> <span id="display-wake-time">--</span></p>
+                        <div id="current-sleep-goal" style="margin-top: 24px; display: none;">
+                            <div class="active-status">
+                                <div class="status-indicator sleep"></div>
+                                <div class="status-text">
+                                    <strong>Active Sleep Goal</strong>
+                                    <div>Target: <span id="display-sleep-hours">--</span> hours</div>
+                                    <div>Bedtime: <span id="display-bedtime">--</span></div>
+                                    <div>Wake: <span id="display-wake-time">--</span></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
 
