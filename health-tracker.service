@@ -1,0 +1,25 @@
+[Unit]
+Description=Health Tracker Web Application
+Documentation=https://github.com/hjpdebeer/health_track
+After=network.target
+
+[Service]
+Type=simple
+User=serveradmin
+WorkingDirectory=/home/serveradmin/health_track
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutStopSec=5
+
+# Output to journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=health-tracker
+
+[Install]
+WantedBy=multi-user.target
