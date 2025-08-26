@@ -308,11 +308,11 @@ class HealthTracker {
     
     // Update status
     document.getElementById('fast-status').textContent = 
-      isActive ? 'Fasting in progress' : 'Not fasting';
+      isActive ? 'Fasting In Progress' : 'Not Fasting';
     
     // Update sleep status
     document.getElementById('sleep-status').textContent = 
-      this.currentSleep ? 'Sleeping' : 'Not sleeping';
+      this.currentSleep ? 'Sleeping In Progress' : 'Not Sleeping';
     
     // If we have an active fast, populate the display
     if (isActive && this.currentFast) {
@@ -627,7 +627,7 @@ class HealthTracker {
     
     // Update status
     document.getElementById('sleep-status').textContent = 
-      isActive ? 'Sleeping' : 'Not sleeping';
+      isActive ? 'Sleeping In Progress' : 'Not Sleeping';
     
     // If we have an active sleep, populate the display
     if (isActive && this.currentSleep) {
