@@ -4,213 +4,261 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Health Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <div class="app-logo">
-                    <span class="logo-icon">🏥</span>
-                    <span class="logo-text">Health Tracker</span>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none">
+                        <span class="fs-4 me-2">🏥</span>
+                        <span class="fs-4 fw-semibold text-primary">Health Tracker</span>
+                    </div>
+                    
+                    <div class="input-group mb-3 mt-3">
+                        <span class="input-group-text">🔍</span>
+                        <input type="text" class="form-control" placeholder="Search">
+                    </div>
+                    
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link active" aria-current="page">
+                                <span class="me-2">📊</span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/goals.html" class="nav-link text-dark">
+                                <span class="me-2">🎯</span>
+                                Goals
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/settings.html" class="nav-link text-dark">
+                                <span class="me-2">⚙️</span>
+                                Settings
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Health Apps</span>
+                    </h6>
+                    <ul class="nav nav-pills flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="#">
+                                <span class="me-2">🏋️</span>
+                                Weight
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link text-dark" href="#">
+                                <span class="me-2">⏰</span>
+                                Fasting
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link text-dark" href="#">
+                                <span class="me-2">😴</span>
+                                Sleep
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-            </div>
+            </nav>
             
-            <div class="sidebar-search">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" placeholder="Search">
-                </div>
-            </div>
-            
-            <div class="sidebar-menu">
-                <a href="/" class="menu-item active">
-                    <span class="menu-icon">📊</span>
-                    <span class="menu-text">Dashboard</span>
-                </a>
-                <a href="/goals.html" class="menu-item">
-                    <span class="menu-icon">🎯</span>
-                    <span class="menu-text">Goals</span>
-                </a>
-                <a href="/settings.html" class="menu-item">
-                    <span class="menu-icon">⚙️</span>
-                    <span class="menu-text">Settings</span>
-                </a>
-            </div>
-            
-            <div class="sidebar-apps">
-                <h3>Health Apps</h3>
-                <a href="#" class="app-item">
-                    <span class="app-icon">🏋️</span>
-                    <span class="app-text">Weight</span>
-                </a>
-                <a href="#" class="app-item">
-                    <span class="app-icon">⏰</span>
-                    <span class="app-text">Fasting</span>
-                </a>
-                <a href="#" class="app-item">
-                    <span class="app-icon">😴</span>
-                    <span class="app-text">Sleep</span>
-                </a>
-            </div>
-        </nav>
-        
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="content-header">
-                <h1>What can I help you track today?</h1>
-                <button class="btn-primary">
-                    <span>📈</span>
-                    View Reports
-                </button>
-            </header>
-            
-            <!-- Quick Stats -->
-            <section class="quick-stats">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon weight">🏋️</div>
-                        <div class="stat-content">
-                            <h3>Current Weight</h3>
-                            <div class="stat-value" id="current-weight">--</div>
-                            <div class="stat-subtitle">Last updated</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon goal">🎯</div>
-                        <div class="stat-content">
-                            <h3>Goal Weight</h3>
-                            <div class="stat-value" id="goal-weight">--</div>
-                            <div class="stat-subtitle">Target goal</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon progress">📊</div>
-                        <div class="stat-content">
-                            <h3>Progress</h3>
-                            <div class="stat-value" id="progress">--</div>
-                            <div class="stat-subtitle">Towards goal</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon bmi">📏</div>
-                        <div class="stat-content">
-                            <h3>BMI</h3>
-                            <div class="stat-value" id="bmi-value">--</div>
-                            <div class="stat-subtitle">Body mass index</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon fast">⏰</div>
-                        <div class="stat-content">
-                            <h3>Current Fast</h3>
-                            <div class="stat-value" id="fast-status">Not fasting</div>
-                            <div class="stat-subtitle">Fasting status</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon sleep">😴</div>
-                        <div class="stat-content">
-                            <h3>Current Sleep</h3>
-                            <div class="stat-value" id="sleep-status">Not sleeping</div>
-                            <div class="stat-subtitle">Sleep status</div>
-                        </div>
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">What can I help you track today?</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary">
+                            <span class="me-1">📈</span>
+                            View Reports
+                        </button>
                     </div>
                 </div>
-            </section>
             
-            <!-- Health Modules -->
-            <section class="health-modules">
-                <h2>Health Modules</h2>
+                <!-- Quick Stats -->
+                <div class="row mb-4">
+                    <div class="col-sm-6 col-lg-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="display-6 mb-2">🏋️</div>
+                                <h6 class="card-title">Current Weight</h6>
+                                <h4 class="card-text text-primary" id="current-weight">--</h4>
+                                <small class="text-muted">Last updated</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-lg-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="display-6 mb-2">🎯</div>
+                                <h6 class="card-title">Goal Weight</h6>
+                                <h4 class="card-text text-success" id="goal-weight">--</h4>
+                                <small class="text-muted">Target goal</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-lg-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="display-6 mb-2">📊</div>
+                                <h6 class="card-title">Progress</h6>
+                                <h4 class="card-text text-info" id="progress">--</h4>
+                                <small class="text-muted">Towards goal</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-lg-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="display-6 mb-2">📏</div>
+                                <h6 class="card-title">BMI</h6>
+                                <h4 class="card-text text-warning" id="bmi-value">--</h4>
+                                <small class="text-muted">Body mass index</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-lg-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="display-6 mb-2">⏰</div>
+                                <h6 class="card-title">Current Fast</h6>
+                                <h4 class="card-text text-secondary" id="fast-status">Not fasting</h4>
+                                <small class="text-muted">Fasting status</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-lg-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="display-6 mb-2">😴</div>
+                                <h6 class="card-title">Current Sleep</h6>
+                                <h4 class="card-text text-secondary" id="sleep-status">Not sleeping</h4>
+                                <small class="text-muted">Sleep status</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Health Modules -->
+                <h2 class="mt-4 mb-3">Health Modules</h2>
                 
-                <div class="modules-grid">
+                <div class="row g-4">
                     <!-- Weight Tracking -->
-                    <div class="module-card">
-                        <div class="module-header">
-                            <div class="module-icon weight">🏋️</div>
-                            <div class="module-title">
-                                <h3>Weight Tracker</h3>
-                                <p>Log and track your weight progress</p>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="display-6 me-3">🏋️</div>
+                                    <div>
+                                        <h5 class="card-title mb-1">Weight Tracker</h5>
+                                        <small>Log and track your weight progress</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <form id="weight-form">
+                                    <div class="row mb-3">
+                                        <div class="col-sm-6">
+                                            <input type="number" class="form-control" id="weight-input" placeholder="Weight" step="0.1" required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <input type="date" class="form-control" id="weight-date" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea class="form-control" id="weight-notes" placeholder="Notes (optional)" rows="2"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Log Weight</button>
+                                </form>
                             </div>
                         </div>
-                        
-                        <form class="module-form" id="weight-form">
-                            <div class="form-group">
-                                <input type="number" id="weight-input" placeholder="Weight" step="0.1" required>
-                                <input type="date" id="weight-date" required>
-                            </div>
-                            <textarea id="weight-notes" placeholder="Notes (optional)" rows="2"></textarea>
-                            <button type="submit" class="btn-module">Log Weight</button>
-                        </form>
                     </div>
                     
                     <!-- Fasting Manager -->
-                    <div class="module-card">
-                        <div class="module-header">
-                            <div class="module-icon fasting">⏰</div>
-                            <div class="module-title">
-                                <h3 id="fasting-title">Fasting Manager</h3>
-                                <p>Track your intermittent fasting</p>
-                            </div>
-                        </div>
-                        
-                        <div id="start-fasting-section">
-                            <div class="form-group">
-                                <select id="fasting-duration">
-                                    <option value="16">16:8 - 16 Hours Fasting / 8 Hours Eating</option>
-                                    <option value="18">18:6 - 18 Hours Fasting / 6 Hours Eating</option>
-                                    <option value="20">20:4 - 20 Hours Fasting / 4 Hours Eating</option>
-                                    <option value="24">24:0 - 24 Hours Fasting / OMAD</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-row">
-                                <input type="date" id="fast-start-date" required>
-                                <input type="time" id="fast-start-time" required>
-                            </div>
-                            
-                            <button id="start-fast" class="btn-module">Start Fast</button>
-                        </div>
-                        
-                        <div id="active-fast-section" style="display: none;">
-                            <div class="active-status">
-                                <div class="status-indicator active"></div>
-                                <div class="status-text">
-                                    <strong>Fast in Progress</strong>
-                                    <div>Started: <span id="fast-start-display"></span></div>
-                                    <div>Duration: <span id="fast-duration-display"></span> hours</div>
-                                    <div>Remaining: <span id="time-remaining"></span></div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <div class="d-flex align-items-center">
+                                    <div class="display-6 me-3">⏰</div>
+                                    <div>
+                                        <h5 class="card-title mb-1" id="fasting-title">Fasting Manager</h5>
+                                        <small>Track your intermittent fasting</small>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <div class="progress-bar">
-                                <div id="progress-fill"></div>
-                            </div>
-                            
-                            <div class="break-fast-controls">
-                                <div class="fast-end-options">
-                                    <div class="fast-end-option">
-                                        <button id="end-fast-now" class="btn-secondary">End Now</button>
-                                        <small>End fast at current time</small>
+                            <div class="card-body">
+                                <div id="start-fasting-section">
+                                    <div class="mb-3">
+                                        <select class="form-select" id="fasting-duration">
+                                            <option value="16">16:8 - 16 Hours Fasting / 8 Hours Eating</option>
+                                            <option value="18">18:6 - 18 Hours Fasting / 6 Hours Eating</option>
+                                            <option value="20">20:4 - 20 Hours Fasting / 4 Hours Eating</option>
+                                            <option value="24">24:0 - 24 Hours Fasting / OMAD</option>
+                                        </select>
                                     </div>
                                     
-                                    <div class="fast-end-option">
-                                        <div class="custom-end-controls">
-                                            <div class="form-row">
-                                                <input type="date" id="break-date" required>
-                                                <input type="time" id="break-time" required>
+                                    <div class="row mb-3">
+                                        <div class="col-sm-6">
+                                            <input type="date" class="form-control" id="fast-start-date" required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <input type="time" class="form-control" id="fast-start-time" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <button id="start-fast" class="btn btn-warning w-100">Start Fast</button>
+                                </div>
+                        
+                                <div id="active-fast-section" style="display: none;">
+                                    <div class="alert alert-success d-flex align-items-center" role="alert">
+                                        <div class="spinner-grow spinner-grow-sm text-success me-3" role="status" aria-hidden="true"></div>
+                                        <div>
+                                            <strong>Fast in Progress</strong><br>
+                                            <small>Started: <span id="fast-start-display"></span></small><br>
+                                            <small>Duration: <span id="fast-duration-display"></span> hours</small><br>
+                                            <small>Remaining: <span id="time-remaining"></span></small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar" role="progressbar" id="progress-fill" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    
+                                    <div class="border-top pt-3">
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <button id="end-fast-now" class="btn btn-outline-warning btn-sm w-100">End Now</button>
+                                                <small class="text-muted d-block text-center">End fast at current time</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <div class="row mb-2">
+                                                <div class="col-sm-6">
+                                                    <input type="date" class="form-control form-control-sm" id="break-date" required>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input type="time" class="form-control form-control-sm" id="break-time" required>
+                                                </div>
                                             </div>
                                             
-                                            <textarea id="fast-notes" placeholder="How did the fast go? Any observations..." rows="2"></textarea>
+                                            <textarea class="form-control form-control-sm mb-2" id="fast-notes" placeholder="How did the fast go? Any observations..." rows="2"></textarea>
                                             
-                                            <button id="complete-fast" class="btn-module">Complete Fast</button>
+                                            <button id="complete-fast" class="btn btn-success btn-sm w-100">Complete Fast</button>
                                         </div>
                                     </div>
                                 </div>
@@ -219,51 +267,62 @@
                     </div>
                     
                     <!-- Sleep Manager -->
-                    <div class="module-card">
-                        <div class="module-header">
-                            <div class="module-icon sleep">😴</div>
-                            <div class="module-title">
-                                <h3 id="sleep-title">Sleep Manager</h3>
-                                <p>Track your sleep patterns</p>
-                            </div>
-                        </div>
-                        
-                        <div id="start-sleep-section">
-                            <div class="form-row">
-                                <input type="date" id="sleep-start-date" required>
-                                <input type="time" id="sleep-start-time" required>
-                            </div>
-                            
-                            <button id="start-sleep" class="btn-module">Start Sleep</button>
-                        </div>
-                        
-                        <div id="active-sleep-section" style="display: none;">
-                            <div class="active-status">
-                                <div class="status-indicator sleep"></div>
-                                <div class="status-text">
-                                    <strong>Sleep in Progress</strong>
-                                    <div>Started: <span id="sleep-start-display"></span></div>
-                                    <div>Duration: <span id="sleep-duration-display"></span></div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-info text-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="display-6 me-3">😴</div>
+                                    <div>
+                                        <h5 class="card-title mb-1" id="sleep-title">Sleep Manager</h5>
+                                        <small>Track your sleep patterns</small>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <div class="wake-up-controls">
-                                <div class="sleep-end-options">
-                                    <div class="sleep-end-option">
-                                        <button id="end-sleep-now" class="btn-secondary">Wake Up Now</button>
-                                        <small>End sleep at current time</small>
+                            <div class="card-body">
+                                <div id="start-sleep-section">
+                                    <div class="row mb-3">
+                                        <div class="col-sm-6">
+                                            <input type="date" class="form-control" id="sleep-start-date" required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <input type="time" class="form-control" id="sleep-start-time" required>
+                                        </div>
                                     </div>
                                     
-                                    <div class="sleep-end-option">
-                                        <div class="custom-end-controls">
-                                            <div class="form-row">
-                                                <input type="date" id="wake-date" required>
-                                                <input type="time" id="wake-time" required>
+                                    <button id="start-sleep" class="btn btn-info w-100">Start Sleep</button>
+                                </div>
+                                
+                                <div id="active-sleep-section" style="display: none;">
+                                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                                        <div class="spinner-grow spinner-grow-sm text-info me-3" role="status" aria-hidden="true"></div>
+                                        <div>
+                                            <strong>Sleep in Progress</strong><br>
+                                            <small>Started: <span id="sleep-start-display"></span></small><br>
+                                            <small>Duration: <span id="sleep-duration-display"></span></small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border-top pt-3">
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <button id="end-sleep-now" class="btn btn-outline-info btn-sm w-100">Wake Up Now</button>
+                                                <small class="text-muted d-block text-center">End sleep at current time</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <div class="row mb-2">
+                                                <div class="col-sm-6">
+                                                    <input type="date" class="form-control form-control-sm" id="wake-date" required>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input type="time" class="form-control form-control-sm" id="wake-time" required>
+                                                </div>
                                             </div>
                                             
-                                            <textarea id="sleep-notes" placeholder="How did you sleep? Any observations..." rows="2"></textarea>
+                                            <textarea class="form-control form-control-sm mb-2" id="sleep-notes" placeholder="How did you sleep? Any observations..." rows="2"></textarea>
                                             
-                                            <button id="complete-sleep" class="btn-module">Complete Sleep</button>
+                                            <button id="complete-sleep" class="btn btn-success btn-sm w-100">Complete Sleep</button>
                                         </div>
                                     </div>
                                 </div>
@@ -271,47 +330,58 @@
                         </div>
                     </div>
                 </div>
-            </section>
             
-            <!-- Analytics Section -->
-            <section class="analytics-section">
-                <h2>Analytics & History</h2>
+                <!-- Analytics Section -->
+                <h2 class="mt-5 mb-3">Analytics & History</h2>
                 
-                <div class="analytics-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>Weight Progress</h3>
-                            <button class="btn-link">View Details</button>
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Weight Progress</h5>
+                                <button class="btn btn-link btn-sm p-0">View Details</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container mb-3">
+                                    <canvas id="weight-canvas" width="400" height="200"></canvas>
+                                </div>
+                                <div id="weight-history" class="history-list"></div>
+                            </div>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="weight-canvas" width="400" height="200"></canvas>
-                        </div>
-                        <div id="weight-history" class="history-list"></div>
                     </div>
                     
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>Fasting History</h3>
-                            <button class="btn-link">View Details</button>
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Fasting History</h5>
+                                <button class="btn btn-link btn-sm p-0">View Details</button>
+                            </div>
+                            <div class="card-body">
+                                <div id="fasting-history" class="history-list"></div>
+                            </div>
                         </div>
-                        <div id="fasting-history" class="history-list"></div>
                     </div>
                     
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>Sleep Progress</h3>
-                            <button class="btn-link">View Details</button>
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Sleep Progress</h5>
+                                <button class="btn btn-link btn-sm p-0">View Details</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container mb-3">
+                                    <canvas id="sleep-canvas" width="400" height="200"></canvas>
+                                </div>
+                                <div id="sleep-history" class="history-list"></div>
+                            </div>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="sleep-canvas" width="400" height="200"></canvas>
-                        </div>
-                        <div id="sleep-history" class="history-list"></div>
                     </div>
                 </div>
-            </section>
-        </main>
+            </main>
+        </div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

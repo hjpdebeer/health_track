@@ -4,195 +4,233 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Health Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <div class="app-logo">
-                    <span class="logo-icon">🏥</span>
-                    <span class="logo-text">Health Tracker</span>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none">
+                        <span class="fs-4 me-2">🏥</span>
+                        <span class="fs-4 fw-semibold text-primary">Health Tracker</span>
+                    </div>
+                    
+                    <div class="input-group mb-3 mt-3">
+                        <span class="input-group-text">🔍</span>
+                        <input type="text" class="form-control" placeholder="Search">
+                    </div>
+                    
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link text-dark">
+                                <span class="me-2">📊</span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/goals.html" class="nav-link text-dark">
+                                <span class="me-2">🎯</span>
+                                Goals
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/settings.html" class="nav-link active" aria-current="page">
+                                <span class="me-2">⚙️</span>
+                                Settings
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Health Apps</span>
+                    </h6>
+                    <ul class="nav nav-pills flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="#">
+                                <span class="me-2">🏋️</span>
+                                Weight
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link text-dark" href="#">
+                                <span class="me-2">⏰</span>
+                                Fasting
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link text-dark" href="#">
+                                <span class="me-2">😴</span>
+                                Sleep
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-            </div>
+            </nav>
             
-            <div class="sidebar-search">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" placeholder="Search">
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Settings & Preferences</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary">
+                            <span class="me-1">💾</span>
+                            Save All
+                        </button>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="sidebar-menu">
-                <a href="/" class="menu-item">
-                    <span class="menu-icon">📊</span>
-                    <span class="menu-text">Dashboard</span>
-                </a>
-                <a href="/goals.html" class="menu-item">
-                    <span class="menu-icon">🎯</span>
-                    <span class="menu-text">Goals</span>
-                </a>
-                <a href="/settings.html" class="menu-item active">
-                    <span class="menu-icon">⚙️</span>
-                    <span class="menu-text">Settings</span>
-                </a>
-            </div>
-            
-            <div class="sidebar-apps">
-                <h3>Health Apps</h3>
-                <a href="#" class="app-item">
-                    <span class="app-icon">🏋️</span>
-                    <span class="app-text">Weight</span>
-                </a>
-                <a href="#" class="app-item">
-                    <span class="app-icon">⏰</span>
-                    <span class="app-text">Fasting</span>
-                </a>
-                <a href="#" class="app-item">
-                    <span class="app-icon">😴</span>
-                    <span class="app-text">Sleep</span>
-                </a>
-            </div>
-        </nav>
-        
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="content-header">
-                <h1>Settings & Preferences</h1>
-                <button class="btn-primary">
-                    <span>💾</span>
-                    Save All
-                </button>
-            </header>
 
-            <!-- Settings Modules -->
-            <section class="health-modules">
-                <h2>Application Settings</h2>
+                <!-- Settings Modules -->
+                <h2 class="mt-4 mb-3">Application Settings</h2>
                 
-                <div class="modules-grid">
+                <div class="row g-4">
                     <!-- Unit Preferences -->
-                    <div class="module-card">
-                        <div class="module-header">
-                            <div class="module-icon weight">📏</div>
-                            <div class="module-title">
-                                <h3>Unit Preferences</h3>
-                                <p>Configure your preferred measurement units</p>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="display-6 me-3">📏</div>
+                                    <div>
+                                        <h5 class="card-title mb-1">Unit Preferences</h5>
+                                        <small>Configure your preferred measurement units</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <form id="settings-form">
+                                    <div class="row mb-3">
+                                        <div class="col-sm-6">
+                                            <label class="form-label">Weight Unit</label>
+                                            <select class="form-select" id="weight-unit" required>
+                                                <option value="lbs">Pounds (lbs)</option>
+                                                <option value="kg">Kilograms (kg)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="form-label">Height Unit</label>
+                                            <select class="form-select" id="height-unit" required>
+                                                <option value="inches">Inches</option>
+                                                <option value="cm">Centimeters</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Your Height</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="user-height" placeholder="Your Height" step="0.1" required>
+                                            <span class="input-group-text" id="height-unit-label">inches</span>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100">Save Settings</button>
+                                </form>
                             </div>
                         </div>
-                        
-                        <form class="module-form" id="settings-form">
-                            <div class="form-group">
-                                <select id="weight-unit" required>
-                                    <option value="lbs">Pounds (lbs)</option>
-                                    <option value="kg">Kilograms (kg)</option>
-                                </select>
-                                <select id="height-unit" required>
-                                    <option value="inches">Inches</option>
-                                    <option value="cm">Centimeters</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <input type="number" id="user-height" placeholder="Your Height" step="0.1" required>
-                                <small id="height-unit-label" style="align-self: center; color: #605e5c;">inches</small>
-                            </div>
-
-                            <button type="submit" class="btn-module">Save Settings</button>
-                        </form>
                     </div>
 
                     <!-- Current Settings Display -->
-                    <div class="module-card">
-                        <div class="module-header">
-                            <div class="module-icon goal">📋</div>
-                            <div class="module-title">
-                                <h3>Current Settings</h3>
-                                <p>Your active preferences and configuration</p>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="display-6 me-3">📋</div>
+                                    <div>
+                                        <h5 class="card-title mb-1">Current Settings</h5>
+                                        <small>Your active preferences and configuration</small>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div id="current-settings">
-                            <div class="active-status">
-                                <div class="status-indicator active"></div>
-                                <div class="status-text">
-                                    <strong>Active Configuration</strong>
-                                    <div>Weight Unit: <span id="current-weight-unit">--</span></div>
-                                    <div>Height Unit: <span id="current-height-unit">--</span></div>
-                                    <div>Your Height: <span id="current-height">--</span></div>
+                            <div class="card-body">
+                                <div id="current-settings">
+                                    <div class="alert alert-success d-flex align-items-center" role="alert">
+                                        <div class="spinner-grow spinner-grow-sm text-success me-3" role="status" aria-hidden="true"></div>
+                                        <div>
+                                            <strong>Active Configuration</strong><br>
+                                            <small>Weight Unit: <span id="current-weight-unit">--</span></small><br>
+                                            <small>Height Unit: <span id="current-height-unit">--</span></small><br>
+                                            <small>Your Height: <span id="current-height">--</span></small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Information Section -->
-            <section class="analytics-section">
-                <h2>Health Information</h2>
+                <!-- Information Section -->
+                <h2 class="mt-5 mb-3">Health Information</h2>
                 
-                <div class="analytics-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>BMI Information</h3>
-                            <button class="btn-link">Learn More</button>
-                        </div>
-                        
-                        <div class="bmi-info">
-                            <p style="margin-bottom: 16px; color: #605e5c;">BMI (Body Mass Index) is calculated automatically when you have both weight and height data.</p>
-                            
-                            <div class="bmi-ranges" style="display: flex; flex-direction: column; gap: 12px;">
-                                <div class="bmi-range" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f3f2f1; border-radius: 4px;">
-                                    <span class="bmi-category bmi-underweight" style="font-weight: 500;">Underweight</span>
-                                    <span style="color: #605e5c;">< 18.5</span>
-                                </div>
-                                <div class="bmi-range" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f3f2f1; border-radius: 4px;">
-                                    <span class="bmi-category bmi-normal" style="font-weight: 500;">Normal</span>
-                                    <span style="color: #605e5c;">18.5 - 24.9</span>
-                                </div>
-                                <div class="bmi-range" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f3f2f1; border-radius: 4px;">
-                                    <span class="bmi-category bmi-overweight" style="font-weight: 500;">Overweight</span>
-                                    <span style="color: #605e5c;">25.0 - 29.9</span>
-                                </div>
-                                <div class="bmi-range" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f3f2f1; border-radius: 4px;">
-                                    <span class="bmi-category bmi-obese" style="font-weight: 500;">Obese</span>
-                                    <span style="color: #605e5c;">≥ 30.0</span>
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">BMI Information</h5>
+                                <button class="btn btn-link btn-sm p-0">Learn More</button>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">BMI (Body Mass Index) is calculated automatically when you have both weight and height data.</p>
+                                
+                                <div class="d-grid gap-2">
+                                    <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                        <span class="badge bg-info">Underweight</span>
+                                        <span class="text-muted">< 18.5</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                        <span class="badge bg-success">Normal</span>
+                                        <span class="text-muted">18.5 - 24.9</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                        <span class="badge bg-warning">Overweight</span>
+                                        <span class="text-muted">25.0 - 29.9</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                        <span class="badge bg-danger">Obese</span>
+                                        <span class="text-muted">≥ 30.0</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>Unit Conversions</h3>
-                            <button class="btn-link">Calculator</button>
-                        </div>
-                        
-                        <div class="unit-info" style="display: flex; flex-direction: column; gap: 16px;">
-                            <div>
-                                <h4 style="font-size: 16px; font-weight: 600; color: #323130; margin-bottom: 8px;">Weight Conversion:</h4>
-                                <div style="display: flex; flex-direction: column; gap: 4px; color: #605e5c; font-size: 14px;">
-                                    <span>• 1 kg = 2.205 lbs</span>
-                                    <span>• 1 lb = 0.453 kg</span>
-                                </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Unit Conversions</h5>
+                                <button class="btn btn-link btn-sm p-0">Calculator</button>
                             </div>
-                            
-                            <div>
-                                <h4 style="font-size: 16px; font-weight: 600; color: #323130; margin-bottom: 8px;">Height Conversion:</h4>
-                                <div style="display: flex; flex-direction: column; gap: 4px; color: #605e5c; font-size: 14px;">
-                                    <span>• 1 inch = 2.54 cm</span>
-                                    <span>• 1 cm = 0.394 inches</span>
-                                    <span>• 1 foot = 12 inches = 30.48 cm</span>
+                            <div class="card-body">
+                                <div class="d-flex flex-column gap-3">
+                                    <div>
+                                        <h6 class="fw-semibold text-dark mb-2">Weight Conversion:</h6>
+                                        <ul class="list-unstyled mb-0 text-muted">
+                                            <li class="mb-1">• 1 kg = 2.205 lbs</li>
+                                            <li>• 1 lb = 0.453 kg</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div>
+                                        <h6 class="fw-semibold text-dark mb-2">Height Conversion:</h6>
+                                        <ul class="list-unstyled mb-0 text-muted">
+                                            <li class="mb-1">• 1 inch = 2.54 cm</li>
+                                            <li class="mb-1">• 1 cm = 0.394 inches</li>
+                                            <li>• 1 foot = 12 inches = 30.48 cm</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
-        </main>
+            </main>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="settings.js"></script>
 </body>
 </html>
