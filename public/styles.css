@@ -63,6 +63,7 @@ body {
   background-color: white !important;
   box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
   border-right: 1px solid var(--ms-gray-200);
+  transition: all 0.3s ease;
 }
 
 .sidebar .nav-link {
@@ -288,11 +289,51 @@ body {
   margin-top: 4px;
 }
 
+/* Hamburger Navbar */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--ms-gray-200);
+}
+
+.navbar-brand {
+  font-weight: 600;
+  color: var(--ms-gray-900) !important;
+}
+
+.navbar-toggler {
+  border: 2px solid var(--ms-gray-200);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 120, 212, 0.25);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23323130' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
   .sidebar {
     border-right: none;
     border-bottom: 1px solid var(--ms-gray-200);
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  
+  .sidebar.show {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .main-content {
+    margin-top: 60px;
   }
   
   .card {
@@ -305,6 +346,20 @@ body {
   
   .display-6 {
     font-size: 2rem;
+  }
+}
+
+/* Desktop sidebar improvements */
+@media (min-width: 768px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .navbar {
+    display: none !important;
   }
 }
 
