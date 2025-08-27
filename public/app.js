@@ -40,6 +40,7 @@ class HealthTracker {
     });
 
     document.getElementById('complete-fast').addEventListener('click', (e) => {
+      console.log('Complete fast button clicked');
       e.preventDefault();
       this.completeFast();
     });
@@ -189,10 +190,14 @@ class HealthTracker {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Fast started successfully:', data);
         this.currentFast = data;
+        console.log('Set currentFast to:', this.currentFast);
         this.updateFastingUI();
         this.startFastTimer();
         this.showMessage('Fast started!', 'success');
+      } else {
+        console.error('Failed to start fast, response not ok:', response.status);
       }
     } catch (error) {
       console.error('Error starting fast:', error);
@@ -233,7 +238,10 @@ class HealthTracker {
   }
 
   async completeFast() {
+    console.log('completeFast() called, currentFast:', this.currentFast);
+    
     if (!this.currentFast) {
+      console.error('No currentFast found when trying to complete');
       this.showMessage('No active fast to complete', 'error');
       return;
     }
@@ -261,6 +269,8 @@ class HealthTracker {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Fast completion response:', data);
+        
         this.currentFast = null;
         this.stopFastTimer();
         this.updateFastingUI();
@@ -272,9 +282,12 @@ class HealthTracker {
         
         this.showMessage(`Fast completed! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
         
-        // Show AI recommendation if available
-        if (data.recommendation) {
-          this.showRecommendation(data.recommendation, 'Fasting');
+        // Show message about background processing
+        if (data.recommendation_id) {
+          console.log('Recommendation queued with ID:', data.recommendation_id);
+          this.showMessage(`${data.message} Check the AI Recommendations page in a few moments.`, 'success');
+        } else {
+          console.log('No notes provided, no recommendation queued');
         }
       } else {
         this.showMessage('Error completing fast', 'error');
@@ -312,20 +325,30 @@ class HealthTracker {
     title.textContent = isActive ? '🔄 Active Fast' : '⏰ Fasting Manager';
     
     // Update status
-    document.getElementById('fast-status').textContent = 
-      isActive ? 'Fasting In Progress' : 'Not Fasting';
+    const fastStatusEl = document.getElementById('fast-status');
+    if (fastStatusEl) {
+      fastStatusEl.textContent = isActive ? 'Fasting In Progress' : 'Not Fasting';
+    }
     
-    // Update sleep status
-    document.getElementById('sleep-status').textContent = 
-      this.currentSleep ? 'Sleeping In Progress' : 'Not Sleeping';
+    // Update sleep status (if element exists)
+    const sleepStatusEl = document.getElementById('sleep-status');
+    if (sleepStatusEl) {
+      sleepStatusEl.textContent = this.currentSleep ? 'Sleeping In Progress' : 'Not Sleeping';
+    }
     
     // If we have an active fast, populate the display
     if (isActive && this.currentFast) {
       const startTime = new Date(this.currentFast.start_time);
-      document.getElementById('fast-start-display').textContent = 
-        startTime.toLocaleString();
-      document.getElementById('fast-duration-display').textContent = 
-        this.currentFast.target_hours;
+      
+      const startDisplayEl = document.getElementById('fast-start-display');
+      if (startDisplayEl) {
+        startDisplayEl.textContent = startTime.toLocaleString();
+      }
+      
+      const durationDisplayEl = document.getElementById('fast-duration-display');
+      if (durationDisplayEl) {
+        durationDisplayEl.textContent = this.currentFast.target_hours;
+      }
         
       // Set default break date/time to current time for convenience
       this.setDefaultBreakTime();
@@ -531,6 +554,8 @@ class HealthTracker {
     }
 
     try {
+      console.log('endSleepNow - Sending request to:', `/api/sleep/${this.currentSleep.id}/end`);
+      
       const response = await fetch(`/api/sleep/${this.currentSleep.id}/end`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -539,13 +564,22 @@ class HealthTracker {
           notes: 'Woke up now'
         })
       });
+      
+      console.log('endSleepNow response status:', response.status);
+      console.log('endSleepNow response ok:', response.ok);
 
       if (response.ok) {
+        const data = await response.json();
+        console.log('endSleepNow response:', data);
+        
         this.currentSleep = null;
         this.stopSleepTimer();
         this.updateSleepUI();
+        
+        console.log('About to load sleep history...');
         await this.loadSleepHistory();
-        const data = await response.json();
+        console.log('Sleep history loaded');
+        
         this.showMessage(`Sleep ended! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
       } else {
         this.showMessage('Error ending sleep', 'error');
@@ -574,6 +608,9 @@ class HealthTracker {
     const wakeDateTime = new Date(`${wakeDate}T${wakeTime}`).toISOString();
 
     try {
+      console.log('Sending sleep completion request to:', `/api/sleep/${this.currentSleep.id}/end`);
+      console.log('Request body:', { end_time: wakeDateTime, notes: notes });
+      
       const response = await fetch(`/api/sleep/${this.currentSleep.id}/end`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -582,13 +619,21 @@ class HealthTracker {
           notes: notes
         })
       });
+      
+      console.log('Sleep completion response status:', response.status);
+      console.log('Response ok:', response.ok);
 
       if (response.ok) {
         const data = await response.json();
+        console.log('completeSleep response:', data);
+        
         this.currentSleep = null;
         this.stopSleepTimer();
         this.updateSleepUI();
+        
+        console.log('About to load sleep history from completeSleep...');
         await this.loadSleepHistory();
+        console.log('Sleep history loaded from completeSleep');
         
         // Clear the sleep form
         document.getElementById('sleep-notes').value = '';
@@ -596,9 +641,12 @@ class HealthTracker {
         
         this.showMessage(`Sleep completed! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
         
-        // Show AI recommendation if available
-        if (data.recommendation) {
-          this.showRecommendation(data.recommendation, 'Sleep');
+        // Show message about background processing
+        if (data.recommendation_id) {
+          console.log('Sleep recommendation queued with ID:', data.recommendation_id);
+          this.showMessage(`${data.message} Check the AI Recommendations page in a few moments.`, 'success');
+        } else {
+          console.log('No notes provided, no sleep recommendation queued');
         }
       } else {
         this.showMessage('Error completing sleep', 'error');
@@ -635,15 +683,20 @@ class HealthTracker {
     const title = document.getElementById('sleep-title');
     title.textContent = isActive ? '💤 Active Sleep' : '😴 Sleep Manager';
     
-    // Update status
-    document.getElementById('sleep-status').textContent = 
-      isActive ? 'Sleeping In Progress' : 'Not Sleeping';
+    // Update status (if element exists)
+    const sleepStatusEl = document.getElementById('sleep-status');
+    if (sleepStatusEl) {
+      sleepStatusEl.textContent = isActive ? 'Sleeping In Progress' : 'Not Sleeping';
+    }
     
     // If we have an active sleep, populate the display
     if (isActive && this.currentSleep) {
       const startTime = new Date(this.currentSleep.start_time);
-      document.getElementById('sleep-start-display').textContent = 
-        startTime.toLocaleString();
+      
+      const sleepStartDisplayEl = document.getElementById('sleep-start-display');
+      if (sleepStartDisplayEl) {
+        sleepStartDisplayEl.textContent = startTime.toLocaleString();
+      }
         
       // Set default wake date/time to current time for convenience
       this.setDefaultWakeTime();
@@ -691,12 +744,22 @@ class HealthTracker {
   }
 
   async loadSleepHistory() {
+    console.log('loadSleepHistory() called');
     try {
       const response = await fetch('/api/sleep');
+      console.log('Sleep API response status:', response.status);
+      
       const sleeps = await response.json();
+      console.log('Sleep data received:', sleeps);
       
       const historyDiv = document.getElementById('sleep-history');
+      if (!historyDiv) {
+        console.error('sleep-history element not found!');
+        return;
+      }
+      
       historyDiv.innerHTML = '';
+      console.log('Cleared sleep history div, processing', sleeps.length, 'sleep sessions');
       
       sleeps.slice(0, 5).forEach(sleep => {
         const div = document.createElement('div');
@@ -778,16 +841,37 @@ class HealthTracker {
   }
 
   showRecommendation(recommendation, sessionType) {
-    // Update modal title based on session type
-    document.getElementById('recommendationModalLabel').innerHTML = 
-      `<i class="bi bi-lightbulb me-2"></i>Smart ${sessionType} Recommendation`;
+    console.log('showRecommendation called:', { recommendation, sessionType });
     
-    // Set the recommendation text
-    document.getElementById('recommendationText').textContent = recommendation;
-    
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('recommendationModal'));
-    modal.show();
+    try {
+      // Update modal title based on session type
+      const titleEl = document.getElementById('recommendationModalLabel');
+      if (titleEl) {
+        titleEl.innerHTML = `<i class="bi bi-lightbulb me-2"></i>Smart ${sessionType} Recommendation`;
+      }
+      
+      // Set the recommendation text
+      const textEl = document.getElementById('recommendationText');
+      if (textEl) {
+        textEl.textContent = recommendation;
+      }
+      
+      // Show the modal
+      const modalEl = document.getElementById('recommendationModal');
+      if (modalEl && typeof bootstrap !== 'undefined') {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        console.log('Modal shown successfully');
+      } else {
+        console.error('Bootstrap modal not available or modal element not found');
+        // Fallback: show alert
+        alert(`AI Recommendation: ${recommendation}`);
+      }
+    } catch (error) {
+      console.error('Error showing recommendation:', error);
+      // Fallback: show alert
+      alert(`AI Recommendation: ${recommendation}`);
+    }
   }
 
   showMessage(message, type = 'info') {

@@ -111,6 +111,117 @@ Format your response as: **Recommendation:** [your recommendation]`;
   return `${baseContext}\n\nSession Type: ${sessionType}\nUser Notes: "${notes}"\n\nProvide a brief helpful recommendation.`;
 }
 
+// Background recommendation processing
+async function processRecommendationInBackground(recommendationId) {
+  console.log(`Starting background processing for recommendation ${recommendationId}`);
+  
+  try {
+    // Update status to processing
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE recommendations SET status = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?', 
+        ['processing', recommendationId], (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+    });
+
+    // Get recommendation details
+    const recData = await new Promise((resolve, reject) => {
+      db.get(`SELECT r.*, 
+                CASE 
+                  WHEN r.session_type = 'fasting' THEN (
+                    SELECT json_object(
+                      'target_hours', f.target_hours,
+                      'actual_hours', f.actual_hours, 
+                      'start_time', f.start_time,
+                      'end_time', f.end_time,
+                      'notes', f.notes
+                    ) FROM fasting_sessions f WHERE f.id = r.session_id
+                  )
+                  WHEN r.session_type = 'sleep' THEN (
+                    SELECT json_object(
+                      'actual_hours', s.actual_hours,
+                      'start_time', s.start_time, 
+                      'end_time', s.end_time,
+                      'notes', s.notes
+                    ) FROM sleep_sessions s WHERE s.id = r.session_id
+                  )
+                END as session_data
+              FROM recommendations r 
+              WHERE r.id = ?`, [recommendationId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!recData) {
+      throw new Error('Recommendation not found');
+    }
+
+    const sessionData = JSON.parse(recData.session_data);
+    const userContext = await getUserContext();
+    
+    // Add sleep goal context if it's a sleep session
+    if (recData.session_type === 'sleep') {
+      const sleepGoal = await getSleepGoalContext();
+      Object.assign(userContext, sleepGoal);
+    }
+
+    // Generate recommendation
+    const recommendation = await generateRecommendation(
+      recData.session_type, 
+      sessionData, 
+      sessionData.notes, 
+      userContext
+    );
+
+    // Save completed recommendation
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE recommendations SET status = ?, recommendation = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?', 
+        ['completed', recommendation, recommendationId], (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+    });
+
+    console.log(`Successfully completed recommendation ${recommendationId}`);
+    
+  } catch (error) {
+    console.error(`Failed to process recommendation ${recommendationId}:`, error.message);
+    
+    // Save error status
+    await new Promise((resolve) => {
+      db.run('UPDATE recommendations SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?', 
+        ['failed', error.message, recommendationId], (err) => {
+          if (err) console.error('Failed to save error status:', err);
+          resolve();
+        });
+    });
+  }
+}
+
+// Queue a recommendation for background processing
+async function queueRecommendation(sessionType, sessionId) {
+  return new Promise((resolve, reject) => {
+    db.run('INSERT INTO recommendations (session_type, session_id, status) VALUES (?, ?, ?)',
+      [sessionType, sessionId, 'pending'],
+      function(err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        
+        const recommendationId = this.lastID;
+        console.log(`Queued recommendation ${recommendationId} for ${sessionType} session ${sessionId}`);
+        
+        // Start background processing (non-blocking)
+        setTimeout(() => processRecommendationInBackground(recommendationId), 100);
+        
+        resolve(recommendationId);
+      });
+  });
+}
+
 // API Routes
 
 // Weight entries
@@ -200,25 +311,15 @@ app.patch('/api/fasting/:id/end', async (req, res) => {
           return;
         }
         
-        let recommendation = null;
+        let recommendationId = null;
         
-        // Generate recommendation if notes are provided
+        // Queue recommendation for background processing if notes are provided
         if (notes && notes.trim()) {
           try {
-            // Get user context for better recommendations
-            const userContext = await getUserContext();
-            
-            const sessionData = {
-              target_hours: row.target_hours,
-              actual_hours: actualHours,
-              start_time: row.start_time,
-              end_time: endDateTime
-            };
-            
-            recommendation = await generateRecommendation('fasting', sessionData, notes, userContext);
+            recommendationId = await queueRecommendation('fasting', id);
           } catch (error) {
-            console.error('Failed to generate recommendation:', error.message);
-            // Don't fail the session update if recommendation fails
+            console.error('Failed to queue recommendation:', error.message);
+            // Don't fail the session update if recommendation queueing fails
           }
         }
         
@@ -226,7 +327,8 @@ app.patch('/api/fasting/:id/end', async (req, res) => {
           success: true, 
           end_time: endDateTime, 
           actual_hours: actualHours,
-          recommendation: recommendation
+          recommendation_id: recommendationId,
+          message: recommendationId ? 'Session completed! AI recommendation is being generated in the background.' : 'Session completed!'
         });
       }
     );
@@ -418,24 +520,15 @@ app.patch('/api/sleep/:id/end', async (req, res) => {
           return;
         }
         
-        let recommendation = null;
+        let recommendationId = null;
         
-        // Generate recommendation if notes are provided
+        // Queue recommendation for background processing if notes are provided
         if (notes && notes.trim()) {
           try {
-            // Get sleep goal for context
-            const sleepGoal = await getSleepGoalContext();
-            
-            const sessionData = {
-              actual_hours: actualHours,
-              start_time: row.start_time,
-              end_time: endDateTime
-            };
-            
-            recommendation = await generateRecommendation('sleep', sessionData, notes, sleepGoal);
+            recommendationId = await queueRecommendation('sleep', id);
           } catch (error) {
-            console.error('Failed to generate sleep recommendation:', error.message);
-            // Don't fail the session update if recommendation fails
+            console.error('Failed to queue sleep recommendation:', error.message);
+            // Don't fail the session update if recommendation queueing fails
           }
         }
         
@@ -443,7 +536,8 @@ app.patch('/api/sleep/:id/end', async (req, res) => {
           success: true, 
           end_time: endDateTime, 
           actual_hours: actualHours,
-          recommendation: recommendation
+          recommendation_id: recommendationId,
+          message: recommendationId ? 'Session completed! AI recommendation is being generated in the background.' : 'Session completed!'
         });
       }
     );
@@ -536,6 +630,94 @@ app.get('/api/stats', (req, res) => {
         res.json(stats);
       });
     });
+  });
+});
+
+// Recommendations endpoints
+app.get('/api/recommendations', (req, res) => {
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = parseInt(req.query.offset) || 0;
+  
+  db.all(`SELECT r.*, 
+            CASE 
+              WHEN r.session_type = 'fasting' THEN (
+                SELECT json_object(
+                  'start_time', f.start_time,
+                  'end_time', f.end_time,
+                  'target_hours', f.target_hours,
+                  'actual_hours', f.actual_hours,
+                  'notes', f.notes
+                ) FROM fasting_sessions f WHERE f.id = r.session_id
+              )
+              WHEN r.session_type = 'sleep' THEN (
+                SELECT json_object(
+                  'start_time', s.start_time,
+                  'end_time', s.end_time,
+                  'actual_hours', s.actual_hours,
+                  'notes', s.notes
+                ) FROM sleep_sessions s WHERE s.id = r.session_id
+              )
+            END as session_data
+          FROM recommendations r 
+          ORDER BY r.created_at DESC 
+          LIMIT ? OFFSET ?`, [limit, offset], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    
+    // Parse session_data JSON strings
+    const recommendations = rows.map(row => ({
+      ...row,
+      session_data: row.session_data ? JSON.parse(row.session_data) : null
+    }));
+    
+    res.json(recommendations);
+  });
+});
+
+app.get('/api/recommendations/:id', (req, res) => {
+  const { id } = req.params;
+  
+  db.get(`SELECT r.*, 
+            CASE 
+              WHEN r.session_type = 'fasting' THEN (
+                SELECT json_object(
+                  'start_time', f.start_time,
+                  'end_time', f.end_time,
+                  'target_hours', f.target_hours,
+                  'actual_hours', f.actual_hours,
+                  'notes', f.notes
+                ) FROM fasting_sessions f WHERE f.id = r.session_id
+              )
+              WHEN r.session_type = 'sleep' THEN (
+                SELECT json_object(
+                  'start_time', s.start_time,
+                  'end_time', s.end_time,
+                  'actual_hours', s.actual_hours,
+                  'notes', s.notes
+                ) FROM sleep_sessions s WHERE s.id = r.session_id
+              )
+            END as session_data
+          FROM recommendations r 
+          WHERE r.id = ?`, [id], (err, row) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    
+    if (!row) {
+      res.status(404).json({ error: 'Recommendation not found' });
+      return;
+    }
+    
+    // Parse session_data JSON string
+    const recommendation = {
+      ...row,
+      session_data: row.session_data ? JSON.parse(row.session_data) : null
+    };
+    
+    res.json(recommendation);
   });
 });
 
