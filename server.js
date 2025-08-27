@@ -2,6 +2,8 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +16,100 @@ app.use(express.static('public'));
 // Database setup
 const dbPath = path.join(__dirname, 'health_track.db');
 const db = new sqlite3.Database(dbPath);
+
+// Ollama integration function
+async function generateRecommendation(sessionType, sessionData, notes, userContext = {}) {
+  return new Promise((resolve, reject) => {
+    // Get configured model from settings or default to gemma2:2b
+    db.get('SELECT ai_model FROM settings WHERE id = 1', (err, row) => {
+      const model = row?.ai_model || 'gemma2:2b';
+      const prompt = createRecommendationPrompt(sessionType, sessionData, notes, userContext);
+      
+      const postData = JSON.stringify({
+        model: model,
+        prompt: prompt,
+        stream: false,
+        options: {
+          temperature: 0.7,
+          top_p: 0.9
+        }
+      });
+
+      const options = {
+        hostname: 'localhost',
+        port: 11434,
+        path: '/api/generate',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
+
+      const req = http.request(options, (res) => {
+        let data = '';
+        
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        res.on('end', () => {
+          try {
+            const response = JSON.parse(data);
+            resolve(response.response || 'Unable to generate recommendation');
+          } catch (error) {
+            reject(new Error('Failed to parse Ollama response'));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        reject(new Error(`Ollama request failed: ${error.message}`));
+      });
+
+      req.write(postData);
+      req.end();
+    });
+  });
+}
+
+function createRecommendationPrompt(sessionType, sessionData, notes, userContext) {
+  const baseContext = `You are a helpful health and wellness assistant providing personalized recommendations based on user's ${sessionType} session data. Provide practical, safe, and encouraging advice. Always include a medical disclaimer that this is not medical advice.`;
+  
+  if (sessionType === 'fasting') {
+    return `${baseContext}
+
+FASTING SESSION DATA:
+- Target Duration: ${sessionData.target_hours} hours
+- Actual Duration: ${sessionData.actual_hours} hours
+- Start Time: ${sessionData.start_time}
+- End Time: ${sessionData.end_time}
+- User Notes: "${notes || 'No notes provided'}"
+${userContext.currentWeight ? `- Current Weight: ${userContext.currentWeight} ${userContext.weight_unit}` : ''}
+${userContext.goalWeight ? `- Goal Weight: ${userContext.goalWeight} ${userContext.weight_unit}` : ''}
+
+Please provide a brief (2-3 sentences) personalized recommendation for their next fasting session based on their experience and notes. Focus on practical tips for improvement, hydration, timing, or duration adjustments. End with an encouraging note.
+
+Format your response as: **Recommendation:** [your recommendation]`;
+  } 
+  
+  if (sessionType === 'sleep') {
+    return `${baseContext}
+
+SLEEP SESSION DATA:
+- Duration: ${sessionData.actual_hours} hours
+- Start Time: ${sessionData.start_time}
+- End Time: ${sessionData.end_time}
+- User Notes: "${notes || 'No notes provided'}"
+${userContext.targetSleepHours ? `- Target Sleep Hours: ${userContext.targetSleepHours}` : ''}
+
+Please provide a brief (2-3 sentences) personalized recommendation for improving their sleep quality based on their experience and notes. Focus on practical tips for better sleep hygiene, timing, or environmental factors. End with an encouraging note.
+
+Format your response as: **Recommendation:** [your recommendation]`;
+  }
+
+  return `${baseContext}\n\nSession Type: ${sessionType}\nUser Notes: "${notes}"\n\nProvide a brief helpful recommendation.`;
+}
 
 // API Routes
 
@@ -72,13 +168,13 @@ app.post('/api/fasting/start', (req, res) => {
   );
 });
 
-app.patch('/api/fasting/:id/end', (req, res) => {
+app.patch('/api/fasting/:id/end', async (req, res) => {
   const { id } = req.params;
   const { end_time, notes } = req.body;
   const endDateTime = end_time || new Date().toISOString();
   
-  // Get the start time to calculate actual duration
-  db.get('SELECT start_time FROM fasting_sessions WHERE id = ?', [id], (err, row) => {
+  // Get the start time and target hours to calculate actual duration
+  db.get('SELECT start_time, target_hours FROM fasting_sessions WHERE id = ?', [id], async (err, row) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -94,19 +190,77 @@ app.patch('/api/fasting/:id/end', (req, res) => {
     const endTime = new Date(endDateTime);
     const actualHours = (endTime - startTime) / (1000 * 60 * 60);
     
+    // Update the session in database
     db.run(
       'UPDATE fasting_sessions SET end_time = ?, actual_hours = ?, completed = TRUE, notes = ? WHERE id = ?',
       [endDateTime, actualHours, notes || null, id],
-      function(err) {
+      async function(err) {
         if (err) {
           res.status(500).json({ error: err.message });
           return;
         }
-        res.json({ success: true, end_time: endDateTime, actual_hours: actualHours });
+        
+        let recommendation = null;
+        
+        // Generate recommendation if notes are provided
+        if (notes && notes.trim()) {
+          try {
+            // Get user context for better recommendations
+            const userContext = await getUserContext();
+            
+            const sessionData = {
+              target_hours: row.target_hours,
+              actual_hours: actualHours,
+              start_time: row.start_time,
+              end_time: endDateTime
+            };
+            
+            recommendation = await generateRecommendation('fasting', sessionData, notes, userContext);
+          } catch (error) {
+            console.error('Failed to generate recommendation:', error.message);
+            // Don't fail the session update if recommendation fails
+          }
+        }
+        
+        res.json({ 
+          success: true, 
+          end_time: endDateTime, 
+          actual_hours: actualHours,
+          recommendation: recommendation
+        });
       }
     );
   });
 });
+
+// Helper function to get user context for recommendations
+function getUserContext() {
+  return new Promise((resolve) => {
+    // Get current weight and goal
+    db.get('SELECT weight FROM weight_entries ORDER BY date DESC LIMIT 1', (err, weightRow) => {
+      if (err) {
+        resolve({});
+        return;
+      }
+      
+      db.get('SELECT target_weight FROM goals ORDER BY created_at DESC LIMIT 1', (err, goalRow) => {
+        if (err) {
+          resolve({ currentWeight: weightRow?.weight });
+          return;
+        }
+        
+        db.get('SELECT weight_unit FROM settings WHERE id = 1', (err, settingsRow) => {
+          const context = {
+            currentWeight: weightRow?.weight,
+            goalWeight: goalRow?.target_weight,
+            weight_unit: settingsRow?.weight_unit || 'lbs'
+          };
+          resolve(context);
+        });
+      });
+    });
+  });
+}
 
 // Get current active fast
 app.get('/api/fasting/current', (req, res) => {
@@ -156,23 +310,23 @@ app.get('/api/settings', (req, res) => {
       res.status(500).json({ error: err.message });
       return;
     }
-    res.json(row || { weight_unit: 'lbs', height_unit: 'inches', user_height: null });
+    res.json(row || { weight_unit: 'lbs', height_unit: 'inches', user_height: null, ai_model: 'gemma2:2b' });
   });
 });
 
 app.post('/api/settings', (req, res) => {
-  const { weight_unit, height_unit, user_height } = req.body;
+  const { weight_unit, height_unit, user_height, ai_model } = req.body;
   
   db.run(
-    `INSERT OR REPLACE INTO settings (id, weight_unit, height_unit, user_height, updated_at) 
-     VALUES (1, ?, ?, ?, CURRENT_TIMESTAMP)`,
-    [weight_unit, height_unit, user_height],
+    `INSERT OR REPLACE INTO settings (id, weight_unit, height_unit, user_height, ai_model, updated_at) 
+     VALUES (1, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    [weight_unit, height_unit, user_height, ai_model || 'gemma2:2b'],
     function(err) {
       if (err) {
         res.status(500).json({ error: err.message });
         return;
       }
-      res.json({ weight_unit, height_unit, user_height });
+      res.json({ weight_unit, height_unit, user_height, ai_model: ai_model || 'gemma2:2b' });
     }
   );
 });
@@ -232,13 +386,13 @@ app.post('/api/sleep/start', (req, res) => {
   );
 });
 
-app.patch('/api/sleep/:id/end', (req, res) => {
+app.patch('/api/sleep/:id/end', async (req, res) => {
   const { id } = req.params;
   const { end_time, notes } = req.body;
   const endDateTime = end_time || new Date().toISOString();
   
   // Get the start time to calculate actual duration
-  db.get('SELECT start_time FROM sleep_sessions WHERE id = ?', [id], (err, row) => {
+  db.get('SELECT start_time FROM sleep_sessions WHERE id = ?', [id], async (err, row) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -254,19 +408,60 @@ app.patch('/api/sleep/:id/end', (req, res) => {
     const endTime = new Date(endDateTime);
     const actualHours = (endTime - startTime) / (1000 * 60 * 60);
     
+    // Update the session in database
     db.run(
       'UPDATE sleep_sessions SET end_time = ?, actual_hours = ?, completed = TRUE, notes = ? WHERE id = ?',
       [endDateTime, actualHours, notes || null, id],
-      function(err) {
+      async function(err) {
         if (err) {
           res.status(500).json({ error: err.message });
           return;
         }
-        res.json({ success: true, end_time: endDateTime, actual_hours: actualHours });
+        
+        let recommendation = null;
+        
+        // Generate recommendation if notes are provided
+        if (notes && notes.trim()) {
+          try {
+            // Get sleep goal for context
+            const sleepGoal = await getSleepGoalContext();
+            
+            const sessionData = {
+              actual_hours: actualHours,
+              start_time: row.start_time,
+              end_time: endDateTime
+            };
+            
+            recommendation = await generateRecommendation('sleep', sessionData, notes, sleepGoal);
+          } catch (error) {
+            console.error('Failed to generate sleep recommendation:', error.message);
+            // Don't fail the session update if recommendation fails
+          }
+        }
+        
+        res.json({ 
+          success: true, 
+          end_time: endDateTime, 
+          actual_hours: actualHours,
+          recommendation: recommendation
+        });
       }
     );
   });
 });
+
+// Helper function to get sleep goal context
+function getSleepGoalContext() {
+  return new Promise((resolve) => {
+    db.get('SELECT target_hours FROM sleep_goals ORDER BY created_at DESC LIMIT 1', (err, row) => {
+      if (err) {
+        resolve({});
+        return;
+      }
+      resolve({ targetSleepHours: row?.target_hours });
+    });
+  });
+}
 
 // Get current active sleep
 app.get('/api/sleep/current', (req, res) => {
@@ -343,6 +538,44 @@ app.get('/api/stats', (req, res) => {
     });
   });
 });
+
+// Ollama configuration endpoints
+app.get('/api/ollama/models', async (req, res) => {
+  try {
+    const options = {
+      hostname: 'localhost',
+      port: 11434,
+      path: '/api/tags',
+      method: 'GET'
+    };
+
+    const request = http.request(options, (response) => {
+      let data = '';
+      
+      response.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      response.on('end', () => {
+        try {
+          const models = JSON.parse(data);
+          res.json(models);
+        } catch (error) {
+          res.status(500).json({ error: 'Failed to parse Ollama models' });
+        }
+      });
+    });
+
+    request.on('error', (error) => {
+      res.status(500).json({ error: `Ollama connection failed: ${error.message}` });
+    });
+
+    request.end();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Serve the main page
 app.get('/', (req, res) => {

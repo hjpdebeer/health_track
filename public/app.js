@@ -271,6 +271,11 @@ class HealthTracker {
         this.setDefaultDate();
         
         this.showMessage(`Fast completed! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
+        
+        // Show AI recommendation if available
+        if (data.recommendation) {
+          this.showRecommendation(data.recommendation, 'Fasting');
+        }
       } else {
         this.showMessage('Error completing fast', 'error');
       }
@@ -590,6 +595,11 @@ class HealthTracker {
         this.setDefaultDate();
         
         this.showMessage(`Sleep completed! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
+        
+        // Show AI recommendation if available
+        if (data.recommendation) {
+          this.showRecommendation(data.recommendation, 'Sleep');
+        }
       } else {
         this.showMessage('Error completing sleep', 'error');
       }
@@ -765,6 +775,19 @@ class HealthTracker {
     });
     
     ctx.stroke();
+  }
+
+  showRecommendation(recommendation, sessionType) {
+    // Update modal title based on session type
+    document.getElementById('recommendationModalLabel').innerHTML = 
+      `<i class="bi bi-lightbulb me-2"></i>Smart ${sessionType} Recommendation`;
+    
+    // Set the recommendation text
+    document.getElementById('recommendationText').textContent = recommendation;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('recommendationModal'));
+    modal.show();
   }
 
   showMessage(message, type = 'info') {
