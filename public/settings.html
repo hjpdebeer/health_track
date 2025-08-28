@@ -80,35 +80,60 @@
                                 <div class="d-flex align-items-center">
                                     <div class="display-6 me-3">📏</div>
                                     <div>
-                                        <h5 class="card-title mb-1">Unit Preferences</h5>
-                                        <small>Configure Your Preferred Measurement Units</small>
+                                        <h5 class="card-title mb-1">Personal Information & Units</h5>
+                                        <small>Configure Your Profile and Measurement Units</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-body">
                                 <form id="settings-form">
-                                    <div class="row mb-3">
-                                        <div class="col-sm-6">
-                                            <label class="form-label">Weight Unit</label>
-                                            <select class="form-select" id="weight-unit" required>
-                                                <option value="lbs">Pounds (lbs)</option>
-                                                <option value="kg">Kilograms (kg)</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <label class="form-label">Height Unit</label>
-                                            <select class="form-select" id="height-unit" required>
-                                                <option value="inches">Inches</option>
-                                                <option value="cm">Centimeters</option>
-                                            </select>
+                                    <!-- Personal Information Section -->
+                                    <div class="mb-4">
+                                        <h6 class="fw-semibold text-primary mb-3">Personal Information</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-sm-6">
+                                                <label class="form-label">Date of Birth</label>
+                                                <input type="date" class="form-control" id="date-of-birth" required>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <label class="form-label">Gender</label>
+                                                <select class="form-select" id="gender" required>
+                                                    <option value="">Select Gender</option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                    <option value="other">Other</option>
+                                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label">Your Height</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="user-height" placeholder="Your Height" step="0.1" required>
-                                            <span class="input-group-text" id="height-unit-label">inches</span>
+                                    <!-- Unit Preferences Section -->
+                                    <div class="mb-4">
+                                        <h6 class="fw-semibold text-primary mb-3">Unit Preferences</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-sm-6">
+                                                <label class="form-label">Weight Unit</label>
+                                                <select class="form-select" id="weight-unit" required>
+                                                    <option value="lbs">Pounds (lbs)</option>
+                                                    <option value="kg">Kilograms (kg)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <label class="form-label">Height Unit</label>
+                                                <select class="form-select" id="height-unit" required>
+                                                    <option value="inches">Inches</option>
+                                                    <option value="cm">Centimeters</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Your Height</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="user-height" placeholder="Your Height" step="0.1" required>
+                                                <span class="input-group-text" id="height-unit-label">inches</span>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -136,6 +161,8 @@
                                         <div class="spinner-grow spinner-grow-sm text-success me-3" role="status" aria-hidden="true"></div>
                                         <div>
                                             <strong>Active Configuration</strong><br>
+                                            <small>Age: <span id="current-age">--</span></small><br>
+                                            <small>Gender: <span id="current-gender">--</span></small><br>
                                             <small>Weight Unit: <span id="current-weight-unit">--</span></small><br>
                                             <small>Height Unit: <span id="current-height-unit">--</span></small><br>
                                             <small>Your Height: <span id="current-height">--</span></small>

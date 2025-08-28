@@ -49,6 +49,8 @@ db.serialize(() => {
       weight_unit TEXT DEFAULT 'lbs' CHECK(weight_unit IN ('lbs', 'kg')),
       height_unit TEXT DEFAULT 'inches' CHECK(height_unit IN ('inches', 'cm')),
       user_height REAL,
+      date_of_birth DATE,
+      gender TEXT CHECK(gender IN ('male', 'female', 'other', 'prefer-not-to-say')),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )

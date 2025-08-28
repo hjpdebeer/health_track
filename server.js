@@ -412,23 +412,37 @@ app.get('/api/settings', (req, res) => {
       res.status(500).json({ error: err.message });
       return;
     }
-    res.json(row || { weight_unit: 'lbs', height_unit: 'inches', user_height: null, ai_model: 'gemma2:2b' });
+    res.json(row || { 
+      weight_unit: 'lbs', 
+      height_unit: 'inches', 
+      user_height: null, 
+      date_of_birth: null,
+      gender: null,
+      ai_model: 'gemma2:2b' 
+    });
   });
 });
 
 app.post('/api/settings', (req, res) => {
-  const { weight_unit, height_unit, user_height, ai_model } = req.body;
+  const { date_of_birth, gender, weight_unit, height_unit, user_height, ai_model } = req.body;
   
   db.run(
-    `INSERT OR REPLACE INTO settings (id, weight_unit, height_unit, user_height, ai_model, updated_at) 
-     VALUES (1, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-    [weight_unit, height_unit, user_height, ai_model || 'gemma2:2b'],
+    `INSERT OR REPLACE INTO settings (id, weight_unit, height_unit, user_height, ai_model, date_of_birth, gender, updated_at) 
+     VALUES (1, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    [weight_unit, height_unit, user_height, ai_model || 'gemma2:2b', date_of_birth, gender],
     function(err) {
       if (err) {
         res.status(500).json({ error: err.message });
         return;
       }
-      res.json({ weight_unit, height_unit, user_height, ai_model: ai_model || 'gemma2:2b' });
+      res.json({ 
+        date_of_birth, 
+        gender, 
+        weight_unit, 
+        height_unit, 
+        user_height, 
+        ai_model: ai_model || 'gemma2:2b' 
+      });
     }
   );
 });
