@@ -12,7 +12,8 @@ db.serialize(() => {
       weight REAL NOT NULL,
       date DATE NOT NULL,
       notes TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME
     )
   `);
 
@@ -26,7 +27,8 @@ db.serialize(() => {
       actual_hours REAL,
       completed BOOLEAN DEFAULT FALSE,
       notes TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME
     )
   `);
 
@@ -77,7 +79,8 @@ db.serialize(() => {
       actual_hours REAL,
       completed BOOLEAN DEFAULT FALSE,
       notes TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME
     )
   `);
 

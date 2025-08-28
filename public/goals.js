@@ -250,7 +250,7 @@ class GoalsManager {
             const goal = await response.json();
             
             if (goal) {
-                document.getElementById('display-sleep-hours').textContent = goal.target_hours;
+                document.getElementById('display-sleep-hours').textContent = `${goal.target_hours} Hours`;
                 document.getElementById('display-bedtime').textContent = this.formatTime(goal.target_bedtime);
                 document.getElementById('display-wake-time').textContent = this.formatTime(goal.target_wake_time);
                 document.getElementById('current-sleep-goal').style.display = 'block';

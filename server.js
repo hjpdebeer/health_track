@@ -251,6 +251,61 @@ app.post('/api/weight', (req, res) => {
   );
 });
 
+// Edit weight entry
+app.put('/api/weight/:id', (req, res) => {
+  const { id } = req.params;
+  const { weight, date, notes } = req.body;
+  
+  if (!weight || !date) {
+    res.status(400).json({ error: 'Weight and date are required' });
+    return;
+  }
+  
+  db.run(
+    'UPDATE weight_entries SET weight = ?, date = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [weight, date, notes, id],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      
+      if (this.changes === 0) {
+        res.status(404).json({ error: 'Weight entry not found' });
+        return;
+      }
+      
+      // Return the updated entry
+      db.get('SELECT * FROM weight_entries WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        res.json(row);
+      });
+    }
+  );
+});
+
+// Delete weight entry
+app.delete('/api/weight/:id', (req, res) => {
+  const { id } = req.params;
+  
+  db.run('DELETE FROM weight_entries WHERE id = ?', [id], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    
+    if (this.changes === 0) {
+      res.status(404).json({ error: 'Weight entry not found' });
+      return;
+    }
+    
+    res.json({ message: 'Weight entry deleted successfully' });
+  });
+});
+
 // Fasting sessions
 app.get('/api/fasting', (req, res) => {
   db.all('SELECT * FROM fasting_sessions ORDER BY start_time DESC', (err, rows) => {
@@ -376,6 +431,72 @@ app.get('/api/fasting/current', (req, res) => {
       res.json(row || null);
     }
   );
+});
+
+// Edit fasting session
+app.put('/api/fasting/:id', (req, res) => {
+  const { id } = req.params;
+  const { start_time, end_time, target_hours, notes } = req.body;
+  
+  if (!start_time || !target_hours) {
+    res.status(400).json({ error: 'Start time and target hours are required' });
+    return;
+  }
+  
+  // Calculate actual hours if end_time is provided
+  let actualHours = null;
+  let completed = false;
+  
+  if (end_time) {
+    const startTime = new Date(start_time);
+    const endTime = new Date(end_time);
+    actualHours = (endTime - startTime) / (1000 * 60 * 60);
+    completed = true;
+  }
+  
+  db.run(
+    'UPDATE fasting_sessions SET start_time = ?, end_time = ?, target_hours = ?, actual_hours = ?, completed = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [start_time, end_time, target_hours, actualHours, completed, notes, id],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      
+      if (this.changes === 0) {
+        res.status(404).json({ error: 'Fasting session not found' });
+        return;
+      }
+      
+      // Return the updated session
+      db.get('SELECT * FROM fasting_sessions WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        res.json(row);
+      });
+    }
+  );
+});
+
+// Delete fasting session
+app.delete('/api/fasting/:id', (req, res) => {
+  const { id } = req.params;
+  
+  db.run('DELETE FROM fasting_sessions WHERE id = ?', [id], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    
+    if (this.changes === 0) {
+      res.status(404).json({ error: 'Fasting session not found' });
+      return;
+    }
+    
+    res.json({ message: 'Fasting session deleted successfully' });
+  });
 });
 
 // Goals
@@ -583,6 +704,72 @@ app.get('/api/sleep/current', (req, res) => {
       res.json(row || null);
     }
   );
+});
+
+// Edit sleep session
+app.put('/api/sleep/:id', (req, res) => {
+  const { id } = req.params;
+  const { start_time, end_time, notes } = req.body;
+  
+  if (!start_time) {
+    res.status(400).json({ error: 'Start time is required' });
+    return;
+  }
+  
+  // Calculate actual hours if end_time is provided
+  let actualHours = null;
+  let completed = false;
+  
+  if (end_time) {
+    const startTime = new Date(start_time);
+    const endTime = new Date(end_time);
+    actualHours = (endTime - startTime) / (1000 * 60 * 60);
+    completed = true;
+  }
+  
+  db.run(
+    'UPDATE sleep_sessions SET start_time = ?, end_time = ?, actual_hours = ?, completed = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [start_time, end_time, actualHours, completed, notes, id],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      
+      if (this.changes === 0) {
+        res.status(404).json({ error: 'Sleep session not found' });
+        return;
+      }
+      
+      // Return the updated session
+      db.get('SELECT * FROM sleep_sessions WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        res.json(row);
+      });
+    }
+  );
+});
+
+// Delete sleep session
+app.delete('/api/sleep/:id', (req, res) => {
+  const { id } = req.params;
+  
+  db.run('DELETE FROM sleep_sessions WHERE id = ?', [id], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    
+    if (this.changes === 0) {
+      res.status(404).json({ error: 'Sleep session not found' });
+      return;
+    }
+    
+    res.json({ message: 'Sleep session deleted successfully' });
+  });
 });
 
 // Stats endpoint

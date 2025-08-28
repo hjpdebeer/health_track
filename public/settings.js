@@ -67,7 +67,7 @@ class SettingsManager {
     // Update current settings display
     const age = this.calculateAge(this.settings.date_of_birth);
     document.getElementById('current-age').textContent = 
-      age !== null ? `${age} years old` : 'Not set';
+      age !== null ? `${age} Years Old` : 'Not Set';
     
     document.getElementById('current-gender').textContent = 
       this.settings.gender ? 

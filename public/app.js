@@ -227,7 +227,7 @@ class HealthTracker {
         this.updateFastingUI();
         await this.loadFastingHistory();
         const data = await response.json();
-        this.showMessage(`Fast ended! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
+        this.showMessage(`Fast ended! Duration: ${data.actual_hours?.toFixed(1)} Hours`, 'success');
       } else {
         this.showMessage('Error ending fast', 'error');
       }
@@ -280,7 +280,7 @@ class HealthTracker {
         document.getElementById('fast-notes').value = '';
         this.setDefaultDate();
         
-        this.showMessage(`Fast completed! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
+        this.showMessage(`Fast completed! Duration: ${data.actual_hours?.toFixed(1)} Hours`, 'success');
         
         // Show message about background processing
         if (data.recommendation_id) {
@@ -347,7 +347,7 @@ class HealthTracker {
       
       const durationDisplayEl = document.getElementById('fast-duration-display');
       if (durationDisplayEl) {
-        durationDisplayEl.textContent = this.currentFast.target_hours;
+        durationDisplayEl.textContent = `${this.currentFast.target_hours} Hours`;
       }
         
       // Set default break date/time to current time for convenience
@@ -419,14 +419,24 @@ class HealthTracker {
         const div = document.createElement('div');
         div.className = 'history-item';
         div.innerHTML = `
-          <span>${new Date(entry.date).toLocaleDateString()}</span>
-          <span>${entry.weight} ${weightUnit}</span>
-          ${entry.notes ? `<span class="notes">${entry.notes}</span>` : ''}
+          <div class="history-item-content">
+            <span>${new Date(entry.date).toLocaleDateString()}</span>
+            <span>${entry.weight} ${weightUnit}</span>
+            ${entry.notes ? `<span class="notes">${entry.notes}</span>` : ''}
+          </div>
+          <div class="history-item-actions">
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="healthTracker.editWeightEntry(${entry.id})">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="healthTracker.deleteWeightEntry(${entry.id})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         `;
         historyDiv.appendChild(div);
       });
 
-      this.drawWeightChart(weights);
+      await this.drawWeightChart(weights);
     } catch (error) {
       console.error('Error loading weight history:', error);
     }
@@ -453,10 +463,20 @@ class HealthTracker {
         }
         
         div.innerHTML = `
-          <span>${startDate}</span>
-          <span>${durationText}</span>
-          <span class="status">${status}</span>
-          ${fast.notes ? `<span class="notes">${fast.notes}</span>` : ''}
+          <div class="history-item-content">
+            <span>${startDate}</span>
+            <span>${durationText}</span>
+            <span class="status">${status}</span>
+            ${fast.notes ? `<span class="notes">${fast.notes}</span>` : ''}
+          </div>
+          <div class="history-item-actions">
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="healthTracker.editFastingEntry(${fast.id})">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="healthTracker.deleteFastingEntry(${fast.id})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         `;
         historyDiv.appendChild(div);
       });
@@ -465,55 +485,231 @@ class HealthTracker {
     }
   }
 
-  drawWeightChart(weights) {
+  async drawWeightChart(weights) {
     const canvas = document.getElementById('weight-canvas');
     const ctx = canvas.getContext('2d');
     
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Set up high DPI canvas for crisp rendering
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
     
-    if (weights.length < 2) return;
+    // Clear canvas
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    
+    if (weights.length < 1) return;
+
+    // Fetch goal data for target weight line
+    let goal = null;
+    try {
+      const goalResponse = await fetch('/api/goals');
+      goal = await goalResponse.json();
+    } catch (error) {
+      console.error('Error fetching goal data for chart:', error);
+    }
 
     // Prepare data (reverse to show chronologically)
     const data = weights.reverse().slice(-10);
     const values = data.map(w => w.weight);
-    const minWeight = Math.min(...values) - 2;
-    const maxWeight = Math.max(...values) + 2;
+    
+    // Include goal weight in range calculation if available
+    const goalWeight = goal?.target_weight;
+    const startWeight = goal?.start_weight || (data.length > 0 ? data[0].weight : null);
+    let minWeight = Math.min(...values);
+    let maxWeight = Math.max(...values);
+    
+    if (goalWeight) {
+      minWeight = Math.min(minWeight, goalWeight);
+      maxWeight = Math.max(maxWeight, goalWeight);
+    }
+    if (startWeight) {
+      minWeight = Math.min(minWeight, startWeight);
+      maxWeight = Math.max(maxWeight, startWeight);
+    }
+    
+    // Add padding to range
+    const range = maxWeight - minWeight;
+    minWeight -= range * 0.1;
+    maxWeight += range * 0.1;
     
     // Draw chart
-    const padding = 40;
-    const width = canvas.width - padding * 2;
-    const height = canvas.height - padding * 2;
+    const padding = 80; // Increased for axis labels
+    const legendHeight = 60; // Increased for better spacing
+    const width = rect.width - padding * 2;
+    const height = rect.height - padding * 2 - legendHeight;
+    
+    // Calculate weeks from first measurement to goal date (or current date if no goal)
+    const startDate = new Date(data[0].date);
+    const endDate = goal?.target_date ? new Date(goal.target_date) : new Date();
+    const totalWeeks = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24 * 7));
     
     // Draw axes
     ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, canvas.height - padding);
-    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.lineTo(padding, rect.height - padding - legendHeight);
+    ctx.lineTo(rect.width - padding, rect.height - padding - legendHeight);
     ctx.stroke();
     
-    // Draw line
-    ctx.strokeStyle = '#4CAF50';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
+    // Draw Y-axis labels (weight values)
+    ctx.fillStyle = '#666';
+    ctx.font = '12px Segoe UI';
+    ctx.textAlign = 'right';
     
-    data.forEach((point, index) => {
-      const x = padding + (index / (data.length - 1)) * width;
-      const y = canvas.height - padding - ((point.weight - minWeight) / (maxWeight - minWeight)) * height;
+    const weightUnit = this.settings?.weight_unit || 'kg';
+    const numYLabels = 5;
+    for (let i = 0; i <= numYLabels; i++) {
+      const weight = minWeight + (maxWeight - minWeight) * (i / numYLabels);
+      const y = padding + ((maxWeight - weight) / (maxWeight - minWeight)) * height;
       
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
+      // Draw tick mark
+      ctx.strokeStyle = '#ddd';
+      ctx.beginPath();
+      ctx.moveTo(padding - 5, y);
+      ctx.lineTo(padding, y);
+      ctx.stroke();
+      
+      // Draw label
+      ctx.fillText(`${weight.toFixed(1)} ${weightUnit}`, padding - 10, y + 4);
+    }
+    
+    // Draw X-axis labels (week numbers)
+    ctx.textAlign = 'center';
+    // Limit to max 6 labels to prevent overlap, minimum 2
+    const numXLabels = Math.min(6, Math.max(2, Math.floor(totalWeeks / 8)));
+    
+    for (let i = 0; i <= numXLabels; i++) {
+      const weekNumber = Math.floor((totalWeeks * i) / numXLabels);
+      const x = padding + (i / numXLabels) * width;
+      
+      // Draw tick mark
+      ctx.strokeStyle = '#ddd';
+      ctx.beginPath();
+      ctx.moveTo(x, rect.height - padding - legendHeight);
+      ctx.lineTo(x, rect.height - padding - legendHeight + 5);
+      ctx.stroke();
+      
+      // Draw label
+      ctx.fillText(`Week ${weekNumber}`, x, rect.height - padding - legendHeight + 20);
+    }
+    
+    // Add axis titles
+    ctx.font = '14px Segoe UI';
+    ctx.fillStyle = '#333';
+    
+    // Y-axis title
+    ctx.save();
+    ctx.translate(20, rect.height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.fillText(`Weight (${weightUnit})`, 0, 0);
+    ctx.restore();
+    
+    // X-axis title
+    ctx.textAlign = 'center';
+    ctx.fillText('Progress Timeline', rect.width / 2, rect.height - 15);
+    
+    // Handle single data point display
+    if (data.length === 1) {
+      // Draw a large dot for single data point
+      ctx.fillStyle = '#0078d4';
+      const x = padding + width / 2;
+      const y = padding + ((maxWeight - data[0].weight) / (maxWeight - minWeight)) * height;
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Add message
+      ctx.fillStyle = '#666';
+      ctx.font = '16px Segoe UI';
+      ctx.textAlign = 'center';
+      ctx.fillText('Add more weight entries to see progress trends', rect.width / 2, padding + height / 2 + 40);
+    }
+    
+    // Draw actual weight line (blue)
+    if (data.length > 1) {
+      ctx.strokeStyle = '#0078d4'; // Blue color
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      
+      data.forEach((point, index) => {
+        const x = padding + (index / Math.max(data.length - 1, 1)) * width;
+        const y = padding + ((maxWeight - point.weight) / (maxWeight - minWeight)) * height;
+        
+        if (index === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+        
+        // Draw point
+        ctx.fillStyle = '#0078d4';
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+      
+      ctx.stroke();
+    }
+    
+    // Draw target weight line (orange) if goal exists and we have multiple data points
+    if (goal && goal.target_weight && goal.target_date && data.length > 1) {
+      // Use start_weight from goal, or fallback to first weight entry if not set
+      const actualStartWeight = goal.start_weight || data[0].weight;
+      const startDate = new Date(data[0].date);
+      const targetDate = new Date(goal.target_date);
+      const totalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
+      
+      if (totalDays > 0) {
+        ctx.strokeStyle = '#ff8c00'; // Orange color
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        // Calculate target weight points for each data point date
+        data.forEach((point, index) => {
+          const currentDate = new Date(point.date);
+          const daysPassed = Math.ceil((currentDate - startDate) / (1000 * 60 * 60 * 24));
+          const progress = Math.min(daysPassed / totalDays, 1);
+          
+          // Linear interpolation from start weight to target weight
+          const targetWeightAtDate = actualStartWeight + (goal.target_weight - actualStartWeight) * progress;
+          
+          const x = padding + (index / Math.max(data.length - 1, 1)) * width;
+          const y = padding + ((maxWeight - targetWeightAtDate) / (maxWeight - minWeight)) * height;
+          
+          if (index === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        
+        ctx.stroke();
       }
-      
-      // Draw point
-      ctx.fillStyle = '#4CAF50';
-      ctx.fillRect(x - 2, y - 2, 4, 4);
-    });
+    }
     
-    ctx.stroke();
+    // Draw legend
+    const legendY = rect.height - legendHeight + 25;
+    ctx.font = '14px Segoe UI';
+    ctx.textAlign = 'left';
+    
+    // Actual weight legend
+    ctx.fillStyle = '#0078d4';
+    ctx.fillRect(padding, legendY, 20, 3);
+    ctx.fillStyle = '#333';
+    ctx.fillText('Actual Weight', padding + 30, legendY + 12);
+    
+    // Target weight legend (only if goal exists)
+    if (goal && goal.target_weight) {
+      const legendX2 = padding + 180;
+      ctx.fillStyle = '#ff8c00';
+      ctx.fillRect(legendX2, legendY, 20, 3);
+      ctx.fillStyle = '#333';
+      ctx.fillText('Target Weight', legendX2 + 30, legendY + 12);
+    }
   }
 
   async startSleep() {
@@ -580,7 +776,7 @@ class HealthTracker {
         await this.loadSleepHistory();
         console.log('Sleep history loaded');
         
-        this.showMessage(`Sleep ended! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
+        this.showMessage(`Sleep ended! Duration: ${data.actual_hours?.toFixed(1)} Hours`, 'success');
       } else {
         this.showMessage('Error ending sleep', 'error');
       }
@@ -639,7 +835,7 @@ class HealthTracker {
         document.getElementById('sleep-notes').value = '';
         this.setDefaultDate();
         
-        this.showMessage(`Sleep completed! Duration: ${data.actual_hours?.toFixed(1)} hours`, 'success');
+        this.showMessage(`Sleep completed! Duration: ${data.actual_hours?.toFixed(1)} Hours`, 'success');
         
         // Show message about background processing
         if (data.recommendation_id) {
@@ -774,10 +970,20 @@ class HealthTracker {
         }
         
         div.innerHTML = `
-          <span>${startDate}</span>
-          <span>${durationText}</span>
-          <span class="status">${status}</span>
-          ${sleep.notes ? `<span class="notes">${sleep.notes}</span>` : ''}
+          <div class="history-item-content">
+            <span>${startDate}</span>
+            <span>${durationText}</span>
+            <span class="status">${status}</span>
+            ${sleep.notes ? `<span class="notes">${sleep.notes}</span>` : ''}
+          </div>
+          <div class="history-item-actions">
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="healthTracker.editSleepEntry(${sleep.id})">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="healthTracker.deleteSleepEntry(${sleep.id})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         `;
         historyDiv.appendChild(div);
       });
@@ -874,6 +1080,324 @@ class HealthTracker {
     }
   }
 
+  // Weight entry management
+  async editWeightEntry(id) {
+    try {
+      const response = await fetch('/api/weight');
+      const weights = await response.json();
+      const weight = weights.find(w => w.id === id);
+      
+      if (!weight) {
+        this.showMessage('Weight entry not found', 'error');
+        return;
+      }
+      
+      // Populate modal with existing data
+      document.getElementById('edit-weight-id').value = weight.id;
+      document.getElementById('edit-weight-value').value = weight.weight;
+      document.getElementById('edit-weight-date').value = weight.date;
+      document.getElementById('edit-weight-notes').value = weight.notes || '';
+      
+      // Update the weight unit display
+      const weightUnit = this.settings?.weight_unit || 'lbs';
+      document.getElementById('edit-weight-unit').textContent = weightUnit;
+      
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById('editWeightModal'));
+      modal.show();
+    } catch (error) {
+      console.error('Error loading weight entry:', error);
+      this.showMessage('Error loading weight entry', 'error');
+    }
+  }
+  
+  async saveWeightEdit() {
+    const id = document.getElementById('edit-weight-id').value;
+    const weight = parseFloat(document.getElementById('edit-weight-value').value);
+    const date = document.getElementById('edit-weight-date').value;
+    const notes = document.getElementById('edit-weight-notes').value;
+    
+    if (!weight || !date) {
+      this.showMessage('Weight and date are required', 'error');
+      return;
+    }
+    
+    if (weight <= 0) {
+      this.showMessage('Please enter a valid weight', 'error');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/weight/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weight: weight,
+          date: date,
+          notes: notes
+        })
+      });
+      
+      if (response.ok) {
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('editWeightModal')).hide();
+        // Refresh history and stats
+        await this.loadWeightHistory();
+        await this.loadStats();
+        this.showMessage('Weight entry updated successfully', 'success');
+      } else {
+        this.showMessage('Error updating weight entry', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating weight entry:', error);
+      this.showMessage('Error updating weight entry', 'error');
+    }
+  }
+  
+  async deleteWeightEntry(id) {
+    if (!confirm('Are you sure you want to delete this weight entry? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/weight/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        await this.loadWeightHistory();
+        await this.loadStats();
+        this.showMessage('Weight entry deleted successfully', 'success');
+      } else {
+        this.showMessage('Error deleting weight entry', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting weight entry:', error);
+      this.showMessage('Error deleting weight entry', 'error');
+    }
+  }
+
+  // Sleep entry management
+  async editSleepEntry(id) {
+    try {
+      const response = await fetch('/api/sleep');
+      const sleeps = await response.json();
+      const sleep = sleeps.find(s => s.id === id);
+      
+      if (!sleep) {
+        this.showMessage('Sleep entry not found', 'error');
+        return;
+      }
+      
+      // Populate modal with existing data
+      document.getElementById('edit-sleep-id').value = sleep.id;
+      
+      // Parse start time
+      const startDate = new Date(sleep.start_time);
+      document.getElementById('edit-sleep-start-date').value = startDate.toISOString().split('T')[0];
+      document.getElementById('edit-sleep-start-time').value = startDate.toTimeString().slice(0, 5);
+      
+      // Parse end time if exists
+      if (sleep.end_time) {
+        const endDate = new Date(sleep.end_time);
+        document.getElementById('edit-sleep-end-date').value = endDate.toISOString().split('T')[0];
+        document.getElementById('edit-sleep-end-time').value = endDate.toTimeString().slice(0, 5);
+      } else {
+        document.getElementById('edit-sleep-end-date').value = '';
+        document.getElementById('edit-sleep-end-time').value = '';
+      }
+      
+      document.getElementById('edit-sleep-notes').value = sleep.notes || '';
+      
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById('editSleepModal'));
+      modal.show();
+    } catch (error) {
+      console.error('Error loading sleep entry:', error);
+      this.showMessage('Error loading sleep entry', 'error');
+    }
+  }
+  
+  async saveSleepEdit() {
+    const id = document.getElementById('edit-sleep-id').value;
+    const startDate = document.getElementById('edit-sleep-start-date').value;
+    const startTime = document.getElementById('edit-sleep-start-time').value;
+    const endDate = document.getElementById('edit-sleep-end-date').value;
+    const endTime = document.getElementById('edit-sleep-end-time').value;
+    const notes = document.getElementById('edit-sleep-notes').value;
+    
+    if (!startDate || !startTime) {
+      this.showMessage('Start date and time are required', 'error');
+      return;
+    }
+    
+    const startDateTime = `${startDate}T${startTime}:00`;
+    let endDateTime = null;
+    
+    if (endDate && endTime) {
+      endDateTime = `${endDate}T${endTime}:00`;
+    }
+    
+    try {
+      const response = await fetch(`/api/sleep/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          start_time: startDateTime,
+          end_time: endDateTime,
+          notes: notes
+        })
+      });
+      
+      if (response.ok) {
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('editSleepModal')).hide();
+        // Refresh history
+        await this.loadSleepHistory();
+        this.showMessage('Sleep entry updated successfully', 'success');
+      } else {
+        this.showMessage('Error updating sleep entry', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating sleep entry:', error);
+      this.showMessage('Error updating sleep entry', 'error');
+    }
+  }
+  
+  async deleteSleepEntry(id) {
+    if (!confirm('Are you sure you want to delete this sleep entry? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/sleep/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        await this.loadSleepHistory();
+        this.showMessage('Sleep entry deleted successfully', 'success');
+      } else {
+        this.showMessage('Error deleting sleep entry', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting sleep entry:', error);
+      this.showMessage('Error deleting sleep entry', 'error');
+    }
+  }
+  
+  // Fasting entry management
+  async editFastingEntry(id) {
+    try {
+      const response = await fetch('/api/fasting');
+      const fasts = await response.json();
+      const fast = fasts.find(f => f.id === id);
+      
+      if (!fast) {
+        this.showMessage('Fasting entry not found', 'error');
+        return;
+      }
+      
+      // Populate modal with existing data
+      document.getElementById('edit-fasting-id').value = fast.id;
+      document.getElementById('edit-fasting-target').value = fast.target_hours;
+      
+      // Parse start time
+      const startDate = new Date(fast.start_time);
+      document.getElementById('edit-fasting-start-date').value = startDate.toISOString().split('T')[0];
+      document.getElementById('edit-fasting-start-time').value = startDate.toTimeString().slice(0, 5);
+      
+      // Parse end time if exists
+      if (fast.end_time) {
+        const endDate = new Date(fast.end_time);
+        document.getElementById('edit-fasting-end-date').value = endDate.toISOString().split('T')[0];
+        document.getElementById('edit-fasting-end-time').value = endDate.toTimeString().slice(0, 5);
+      } else {
+        document.getElementById('edit-fasting-end-date').value = '';
+        document.getElementById('edit-fasting-end-time').value = '';
+      }
+      
+      document.getElementById('edit-fasting-notes').value = fast.notes || '';
+      
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById('editFastingModal'));
+      modal.show();
+    } catch (error) {
+      console.error('Error loading fasting entry:', error);
+      this.showMessage('Error loading fasting entry', 'error');
+    }
+  }
+  
+  async saveFastingEdit() {
+    const id = document.getElementById('edit-fasting-id').value;
+    const targetHours = document.getElementById('edit-fasting-target').value;
+    const startDate = document.getElementById('edit-fasting-start-date').value;
+    const startTime = document.getElementById('edit-fasting-start-time').value;
+    const endDate = document.getElementById('edit-fasting-end-date').value;
+    const endTime = document.getElementById('edit-fasting-end-time').value;
+    const notes = document.getElementById('edit-fasting-notes').value;
+    
+    if (!startDate || !startTime || !targetHours) {
+      this.showMessage('Start date, time, and target duration are required', 'error');
+      return;
+    }
+    
+    const startDateTime = `${startDate}T${startTime}:00`;
+    let endDateTime = null;
+    
+    if (endDate && endTime) {
+      endDateTime = `${endDate}T${endTime}:00`;
+    }
+    
+    try {
+      const response = await fetch(`/api/fasting/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          start_time: startDateTime,
+          end_time: endDateTime,
+          target_hours: parseInt(targetHours),
+          notes: notes
+        })
+      });
+      
+      if (response.ok) {
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('editFastingModal')).hide();
+        // Refresh history
+        await this.loadFastingHistory();
+        this.showMessage('Fasting entry updated successfully', 'success');
+      } else {
+        this.showMessage('Error updating fasting entry', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating fasting entry:', error);
+      this.showMessage('Error updating fasting entry', 'error');
+    }
+  }
+  
+  async deleteFastingEntry(id) {
+    if (!confirm('Are you sure you want to delete this fasting entry? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/fasting/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        await this.loadFastingHistory();
+        this.showMessage('Fasting entry deleted successfully', 'success');
+      } else {
+        this.showMessage('Error deleting fasting entry', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting fasting entry:', error);
+      this.showMessage('Error deleting fasting entry', 'error');
+    }
+  }
+
   showMessage(message, type = 'info') {
     // Create or update message element
     let messageEl = document.getElementById('message');
@@ -895,6 +1419,7 @@ class HealthTracker {
 }
 
 // Initialize the app when DOM is loaded
+let healthTracker;
 document.addEventListener('DOMContentLoaded', () => {
-  new HealthTracker();
+  healthTracker = new HealthTracker();
 });
